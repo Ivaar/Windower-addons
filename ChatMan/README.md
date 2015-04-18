@@ -13,4 +13,5 @@ Configure chatbased alerts and more commands are as follows:
   
   
   Sound files are currently NOT included. You can add files to the root addon directory with these file names
+  
   gm.wav, tell.wav, talk.wav, emote.wav, examine.wav.
