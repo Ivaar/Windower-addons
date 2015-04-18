@@ -7,3 +7,5 @@ sales menu once on zoning, will queue all commands inside or outside menu, so it
 of items before approaching npc, simply do "//sellnpc" after clicking on npc to sell items in queue. Items are
 removed from queue after all instances are sold. Will not try to sell items equipped, in bazaar or that
 can not be sold to NPC vendors.
+
+##### If there has been a mainenance or update to the game make sure windowers resource files have been updated to reflect new items added.
