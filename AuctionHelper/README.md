@@ -33,6 +33,7 @@ ah save -- save settings related to text object
 
 check settings file for more customization options.
 
+##### If there has been a mainenance or update to the game make sure windowers resource files have been updated to reflect new items added.
 
 TODO:	Expand delivery boxes beyond auction house zones (list mog house zones, other delivery areas),
 	Block sell confirm window when injecting sell packet (only occurs when selling inside sell menu),
