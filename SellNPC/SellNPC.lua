@@ -69,12 +69,8 @@ end
 function cmd(...)
 	local commands = {...}
 	if not commands[1] then return end
-	if commands[1]:lower() == 'item' and commands[2] then
-		check_item(table.concat(commands,' ',2))
-	elseif commands[1]:lower() == 'eval' then
-		assert(loadstring(table.concat(commands, ' ',2)))()
-	elseif commands[2] then
-		
+	if commands[1] then
+		check_item(table.concat(commands,' ',1))
 	elseif appraised then
 		check_que()
 	end
