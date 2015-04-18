@@ -23,10 +23,10 @@ Songs Types Currently supported:
   Ballad x3 -- ballads are NOT implemented as of this writing.
 
 To configure songs use //song [song type] [number] 
-e.g. //song march 2 - sets number of marches to 2 (max values for each song type can be found above.)
+e.g. //sing march 2 - sets number of marches to 2 (max values for each song type can be found above.)
 
 To turn a song off use //song [song type] 0
-e.g. //song madrigal 0 - sets number of madrigals to 0 madrigals will not be used.
+e.g. //sing madrigal 0 - sets number of madrigals to 0 madrigals will not be used.
 
 It will use Warding Round and Herb Pastoral as 3rd and 4th dummy songs respectively,
 a toggle for user defined dummy songs may be added at some point 
