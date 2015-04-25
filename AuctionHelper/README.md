@@ -26,7 +26,7 @@ ah show/ah hide -- show or hide text object, click/drag window to move, accepts 
 	date	-- date and time the item auction ends/returned/was sold
 	price	-- display your asking price
 	empty	-- show/hide empty slots
-	slot	-- show slot number(normalized) next to item entry
+	slot	-- show slot number next to item entry
 
 ah save -- save settings related to text object
 
