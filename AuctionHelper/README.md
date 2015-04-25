@@ -9,7 +9,7 @@ buy [item name] [stack] [price] -- buy an item on auction house
 
 sell [item name] [ stack] [price] -- sell an item, must open ah once after addon has loaded/players logged in.
 
-[item name] - Accepts auto-translate, short or full item name.
+[item name] - Accepts auto-translate, short or full item name, no quotes needed.
 
 [Stack] - "stack" or "1" or "single" or "0"
 
