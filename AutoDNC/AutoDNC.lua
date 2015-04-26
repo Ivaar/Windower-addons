@@ -1,5 +1,5 @@
 _addon.name = 'AutoDNC'
-_addon.version = '1.15.01.20'
+_addon.version = '1.15.04.25'
 _addon.author = 'SblmS2J'
 _addon.commands = {'AutoDNC','DNC'}
 
@@ -32,7 +32,6 @@ _static = {
     dual_toggle = S{'actions','ja','ws','waltz','na','silent'}
     }
 setting = config.load(_static.default)
-setting.target_list = L{}
 clock = os.clock()
 time = clock
 delay = 0
@@ -118,19 +117,18 @@ windower.register_event('prerender',function ()
         end
         if play.status <= 1 and waltz(play,recast) or play.vitals.hpp < 50 then return true else end
         if Engaged then
-            if recast[216] == 0 and setting.samba ~= 0 then
+            if recast[216] and recast[216] == 0 and setting.samba ~= 0 then
                 if not buffs['Haste samba'] and play.vitals.tp >= 350 and setting.samba == 1 then
-                    autoJA('Haste samba', '<me>')
+                    return autoJA('Haste samba', '<me>')
                 elseif setting.samba == 2 and not buffs['Drain samba'] then
                     if play.main_job == 'DNC' and play.vitals.tp >= 400 then
-                        autoJA('Drain samba III', '<me>')
+                        return autoJA('Drain samba III', '<me>')
                     elseif play.sub_job == 'DNC' and play.vitals.tp >= 250 then
-                        autoJA('Drain samba II', '<me>')
+                        return autoJA('Drain samba II', '<me>')
                     end
                 end
-            elseif setting.target_list[1] and buffs['Finishing Move'] == 0 and recast[221] == 0 and play.vitals.tp >= 100 then
-                autoJA('Box Step', '<t>')
-            elseif play.vitals.tp >= 1000 and setting.ws == 1 and mob.hpp >= setting.minwshp and mob.hpp <= setting.maxwshp and math.sqrt(mob.distance) <= setting.distance then
+            end
+            if play.vitals.tp >= 1000 and setting.ws == 1 and mob.hpp >= setting.minwshp and mob.hpp <= setting.maxwshp and math.sqrt(mob.distance) <= setting.distance then
                 if play.main_job == 'DNC' and buffs['Finishing Move'] >= 1 and recast[226] == 0 then
                     autoJA('Climactic Flourish', '<me>')
                 else
@@ -165,7 +163,7 @@ windower.register_event('prerender',function ()
 end)
 
 function waltz(play,recast)
-    if play.main_job ~= 'DNC' and play.sub_job ~= 'DNC' or buffs.sneak and buffs.invisible then return false else end
+    if (play.main_job ~= 'DNC' and play.sub_job ~= 'DNC') or (buffs.invisible) then return false else end
     if setting.waltz == 1 and play.vitals.hpp < setting.waltzhp and play.vitals.tp >= 500 and recast[217] == 0 then
         autoJA('Curing waltz III', '<me>')
         return true
@@ -243,9 +241,6 @@ windower.register_event('incoming chunk', function(id, data)
     end
 end)
 
---proc_table('add'..id)
---proc_table('rem'..id)
-
 function proc_table(msg)
     local id = msg:slice(4)
     local msg = tonumber(msg:slice(1, 3))
@@ -288,24 +283,6 @@ windower.register_event('zone change',function()
     buff_active()
 end)
 
-function claim_mob(mob)
-    if mob and setting.target_list[1] then
-        for k,v in pairs(setting.target_list) do
-            if v == mob.name:lower() and mob.is_npc and mob.valid_target and mob.claim_id == 0 and math.sqrt(mob.distance) < 21 then
-                return true
-            end
-        end
-    end
-end
-
-function addon_error(msg)
-    error('%s: %s':format(_addon.name,msg))
-end
-
-function addon_text(...)
-    print('%s: %s':format(_addon.name,table.concat({...},', ')))
-end
-
 function addon_message(...)
     windower.add_to_chat(0,'%s: %s':format(_addon.name,table.concat({...},', ')))
 end
@@ -321,13 +298,13 @@ windower.register_event('addon command', function(...)
         setting.actions = 0
         addon_message('Actions Off')
     elseif commands[1] == 'load' then
-            setting = config.load(defaults)			
-            addon_message('Global setting Loaded.')
+        setting = config.load(defaults)			
+        addon_message('Global setting Loaded.')
     elseif commands[1]:lower() == 'save' then
-            setting:save()			
-            addon_message('setting saved.')		
---			config.save(setting, 'all')
---			addon_message('Global setting Saved.')
+        setting:save()			
+        addon_message('setting saved.')		
+        --config.save(setting, 'all')
+        --addon_message('Global setting Saved.')
     elseif setting[commands[1]] then
         if not commands[2] then
             if _static.dual_toggle[commands[1]] then
@@ -359,6 +336,15 @@ windower.register_event('addon command', function(...)
             elseif type(setting[commands[1]]) == type(commands[2]) then
                 setting[commands[1]] = tonumber(commands[2]) or table.concat(commands, ' ',2):lower()
                 addon_message(commands[1]..' is now set to '..setting[commands[1]])
+            end
+            if commands[1] == 'proc' then
+                if commands[2]:lower() == 'ja' then
+                    settings.ja = 1
+                    settings.ws = 0
+                elseif commands[2]:lower() == 'ws' then
+                    settings.ws = 1
+                    settings.ja = 0
+                end
             end
         end
     elseif commands[1] == 'active' then
