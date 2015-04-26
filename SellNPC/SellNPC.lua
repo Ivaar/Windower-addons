@@ -1,5 +1,7 @@
 _addon.command = 'SellNPC'
-_addon.version = '1.0.0.1'
+_addon.version = '1.0.0.2'
+_addon.author = 'Ivaar'
+
 require 'lists'
 require 'tables'
 packets = require('packets')
@@ -66,11 +68,10 @@ end
 
 function cmd(...)
     local commands = {...}
-    if not commands[1] then return end
-    if commands[1]:lower() == 'item' and commands[2] then
-        check_item(table.concat(commands,' ',2))
-    elseif commands[1]:lower() == 'eval' then
-        assert(loadstring(table.concat(commands, ' ',2)))()
+    if commands[1] then
+        check_item(table.concat(commands,' ',1))
+    elseif appraised then
+        check_que()
     end
 end
 windower.register_event('addon command', cmd)
