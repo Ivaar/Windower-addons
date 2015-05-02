@@ -1,5 +1,5 @@
 _addon.command = 'SellNPC'
-_addon.version = '1.0.0.2'
+_addon.version = '1.0.0.3'
 _addon.author = 'Ivaar'
 
 require 'lists'
