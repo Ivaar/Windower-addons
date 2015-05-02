@@ -41,6 +41,7 @@ function check_que(item)
 end
 
 function check_item(name)
+    name = windower.convert_auto_trans(name)
     local item = get_item_res(name)
     if not item then actions=false,print('Error: %s not a valid item name.':format(name)) return check_que() end
     if item.flags['No NPC Sale'] == true then actions=false,print('Error: Cannot sell %s to npc vendors':format(item.en)) return check_que(item.id) end
