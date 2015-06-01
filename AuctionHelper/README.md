@@ -19,7 +19,7 @@ inbox / ibox	-- open delivery inbox
 
 outbox / obox	-- open delivery outbox
 
-bazaar [item_name] [price]-- sets bazaar prices for all instances of [item_name] (bazaar window must be open)
+bazaar [item_name] [price]-- sets bazaar prices for all instances of [item_name]. Note: bazaar window must be open.
 
 ah		-- open AH menu
 
