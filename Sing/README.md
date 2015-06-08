@@ -31,13 +31,17 @@ Songs Types Currently supported and thier maximum values:
 	Ballad x3
  
 To configure songs use:
+	
 	//sing [song type] [number] 
 	e.g. //sing march 2 - sets number of marches to 2.*
 
 To turn a song off use :
+	
 	//sing [song type] 0
 	e.g. //sing madrigal 0 - sets number of madrigals to 0 madrigals will not be used.*
-
-	*[song_type] march, minuet, madrigal, scherzo, prelude, ballad, mazurka
-	**[song name] name of song as it appears in game, not case sensitive.
+	
+	
+*[song_type] march, minuet, madrigal, scherzo, prelude, ballad, mazurka
+	
+**[song name] name of song as it appears in game, not case sensitive.
 
