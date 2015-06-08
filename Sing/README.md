@@ -32,11 +32,17 @@ instruments, (if found in inventory/wardrobe.) and applies it to your song limit
 //sing aoe [player_name] [+/-]	-- Add players to aoe watch list(will not sing aoe songs if specified players are not in range, optional.)
 
 Songs Types Currently supported and thier maximum values:
+ 
   March x2
+  
   Minuet x4 (minuets 2-5)
+  
   Madrigal x2
+  
   Scherzo x1
+  
   Prelude x1
+  
   Ballad x3
 
 To configure songs use //sing [song type] [number] 
