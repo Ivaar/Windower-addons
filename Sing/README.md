@@ -3,7 +3,7 @@
 
 Configure songs with commands, calculates song duration based on active job abilities and gear equipped 
 at the endcast, checks active song buffs casted by player (as recorded by the addon) and detects song+ 
-instruments, (if found in inventory/wardrobe.) and applies it to your song limit.
+instruments, (if found in inventory/wardrobe.) and applies it to your song limit. Uses Warding Round and Herb Pastoral as 3rd and 4th dummy songs respectively, a toggle for user defined dummy songs is planned.
 
 ##### Commands:
 
@@ -30,18 +30,14 @@ Songs Types Currently supported and thier maximum values:
 	Prelude x1
 	Ballad x3
  
-To configure songs use //sing [song type] [number] 
+To configure songs use:
+	//sing [song type] [number] 
+	e.g. //sing march 2 - sets number of marches to 2.*
 
-e.g. //sing march 2 - sets number of marches to 2.*
+To turn a song off use :
+	//sing [song type] 0
+	e.g. //sing madrigal 0 - sets number of madrigals to 0 madrigals will not be used.*
 
-To turn a song off use //sing [song type] 0
-
-e.g. //sing madrigal 0 - sets number of madrigals to 0 madrigals will not be used.*
-
-It will use Warding Round and Herb Pastoral as 3rd and 4th dummy songs respectively,
-a toggle for user defined dummy songs will be added at some point.
-
-*[song_type] march, minuet, madrigal, scherzo, prelude, ballad, mazurka
-
-**[song name] name of song as it appears in game, not case sensitive.
+	*[song_type] march, minuet, madrigal, scherzo, prelude, ballad, mazurka
+	**[song name] name of song as it appears in game, not case sensitive.
 
