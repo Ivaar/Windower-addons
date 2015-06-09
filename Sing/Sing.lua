@@ -10,31 +10,29 @@ lasttime = nexttime
 del = 0
 lastdel = 0
 JA_delay = 1.2
-MA_delay = 6
 recast_minimum = 0
 timers = {AoE = {},}
 base_songs = 3
 
 default = {
-    march=2,
-    minuet=1,
-    madrigal=0,
-    scherzo=0,
-    prelude=0,
-    ballad=0,
-    mazurka=0,
     delay=3,
+    dummy1='Knight\'s Minne',
+    dummy2='Knight\'s Minne II',
     marcato='valor minuet v',
     clarion='minuet',
     actions=false,
     pianissimo=false,
     precast=20,
     display = true,
-    aoe = S{},
-    song={
-       }
+    aoe=L{},
+    song={},
+    songs={march=2},
+    text = {}
     }
-equipment = {
+
+setting = config.load(default)
+
+equipment = L{
     [21407] = 'Terpander',
     [20561] = 'Carnwenhan',--119
     [20562] = 'Carnwenhan',--119-2
@@ -57,33 +55,84 @@ equipment = {
     [11153] = 'Aoidos\' Cothrn. +2',
     [11618] = 'Aoidos\' Matinee',
     }
-setting = config.load(default)
-bard_status = texts.new(setting)
-bard_status :show()
+
+buff_ids = L{
+    [195] = 'Paeon',
+    [196] = 'Ballad',
+    [197] = 'Minne',
+    [198] = 'Minuet',
+    [199] = 'Madrigal',
+    [200] = 'Prelude',
+    [201] = 'Mambo',
+    [202] = 'Aubade',
+    [203] = 'Pastoral',
+    [205] = 'Fantasia',
+    [206] = 'Operetta',
+    [207] = 'Capriccio',
+    [209] = 'Round',
+    [210] = 'Gavotte',
+    [214] = 'March',
+    [215] = 'Etude',
+    [216] = 'Carol',
+    [218] = 'Hymnus',
+    [219] = 'Mazurka',
+    [220] = 'Sirvente',
+    [221] = 'Dirge',
+    [222] = 'Scherzo',
+    }
+
+buff_songs = {
+    Paeon = {[1]='Army\'s Paeon V',[2]='Army\'s Paeon  IV',[3]='Army\'s Paeon  III',[4]='Army\'s Paeon  II',[5]='Army\'s Paeon',[6]='Army\'s Paeon'},
+    Ballad = {[1]='Mage\'s Ballad III',[2]='Mage\'s Ballad II',[3]='Mage\'s Ballad'},
+    Minne = {[1]='Knight\'s Minne V',[2]='Knight\'s Minne  IV',[3]='Knight\'s Minne  III',[4]='Knight\'s Minne  II',[5]='Knight\'s Minne'},
+    Minuet = {[1]='Valor Minuet V',[2]='Valor Minuet IV',[3]='Valor Minuet III',[4]='Valor Minuet II',[5]='Valor Minuet'}, 
+    Madrigal = {[1]='Blade Madrigal',[2]='Sword Madrigal'},
+    Prelude = {[1]='Archer\'s Prelude',[2]='Hunter\'s Prelude'},
+    Mambo = {[1]='Dragonfoe Mambo',[2]='Sheepfoe Mambo'},
+    Aubade = {[1]='Fowl Aubade'},
+    Pastoral = {[1]='Herb Pastoral'},
+    Fantasia = {[1]='Shining Fantasia'},
+    Operetta = {[1]='Puppet\'s Operetta',[2]='Scop\'s Operetta'},
+    Capriccio = {[1]='Gold Capriccio'},
+    Round = {[1]='Warding Round'},
+    Gavotte = {[1]='Shining Fantasia'},
+    March = {[1]='Victory March',[2]='Advancing March'},
+    Hymnus = {[1]='Goddess\'s Hymnus'},
+    Mazurka = {[1]='Chocobo Mazurka'},
+    Sirvente = {[1]='Foe Sirvente'},
+    Dirge = {[1]='Adventurer\'s Dirge'},
+    Scherzo = {[1]='Sentinel\'s Scherzo'},
+    }
 
 display_box = function()
     if setting.actions then
-        return 'Auto-Songs [ON]'
+        return ' SING Auto-Songs [ON] '
     else
-        return 'Auto-Songs [OFF]'
+        return ' SING Auto-Songs [OFF] '
     end
 end
 
+bard_status = texts.new('',setting.text,setting)
+bard_status:text(display_box())
+bard_status:show()
+
 windower.register_event('prerender',function ()
+    if not setting.actions then return end
     local curtime = os.clock()
     if nexttime + del <= curtime then
         lasttime = nexttime
         lastdel = del
         nexttime = curtime
         del = 0.1
-        bard_status:text(display_box())
-        if not setting.actions then return end
+        for k,v in pairs(timers) do
+            update_timers(k)
+        end
         local play = windower.ffxi.get_player()
         if not play or (play.status ~= 1 and play.status ~= 0) then return end
-        local lock,JA_WS_lock,Magic_lock,Engaged
-        local maxsongs = base_songs
+        local JA_WS_lock,Magic_lock
         local moving = play_move()
         local buffs = calculate_buffs(play.buffs)
+        local maxsongs = aug_maxsongs('AoE',base_songs,buffs)
         local abil_recasts = windower.ffxi.get_ability_recasts()
         local spell_recasts = windower.ffxi.get_spell_recasts()
         local precast = math.random(setting.precast,setting.precast+10)+math.random()
@@ -95,73 +144,24 @@ windower.register_event('prerender',function ()
         if buffs.silence or buffs.mute then
             Magic_lock = true
         end
-        --if play.status == 1 then Engaged = true end
-        for k,v in pairs(timers) do
-            update_timers(k)
-        end
-       --[[ if buffs['clarion call'] or table.length(timers.AoE) > base_songs then
-            maxsongs = maxsongs+1 
-            song[setting.clarion] = setting[setting.clarion] + 1
-        end--]]
-        maxsongs = aug_maxsongs('AoE',maxsongs,buffs)
         if not Magic_lock then
-            if base_songs == 4 and table.length(timers.AoE) == maxsongs-2 and aoe_range and not buffs.pastoral and spell_recasts[406] <= recast_minimum then
-                cast_song('Herb Pastoral','<me>',JA_WS_lock,buffs)
-            elseif base_songs == 3 and table.length(timers.AoE) == maxsongs-1 and aoe_range and not buffs.round and spell_recasts[414] <= recast_minimum then
-                cast_song('Warding Round','<me>',JA_WS_lock,buffs)
-            elseif setting.march == 2 and spell_recasts[419] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Advancing March'] or os.time() - timers.AoE['Advancing March'] + precast > 0) then
-                cast_song('Advancing March','<me>',JA_WS_lock,buffs)
-            elseif setting.march >= 1 and spell_recasts[420] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Victory March'] or os.time() - timers.AoE['Victory March'] + precast > 0) then
-                cast_song('Victory March','<me>',JA_WS_lock,buffs)
-            elseif setting.minuet == 4 and spell_recasts[395] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Valor Minuet II'] or os.time() - timers.AoE['Valor Minuet II'] + precast > 0) then
-                cast_song('Valor Minuet II','<me>',JA_WS_lock,buffs)
-            elseif setting.minuet == 3 and spell_recasts[396] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Valor Minuet III'] or os.time() - timers.AoE['Valor Minuet III'] + precast > 0) then
-                cast_song('Valor Minuet III','<me>',JA_WS_lock,buffs)
-            elseif setting.minuet >= 2 and spell_recasts[397] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Valor Minuet IV'] or os.time() - timers.AoE['Valor Minuet IV'] + precast > 0) then
-                cast_song('Valor Minuet IV','<me>',JA_WS_lock,buffs)
-            elseif setting.minuet >= 1 and spell_recasts[398] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Valor Minuet V'] or os.time() - timers.AoE['Valor Minuet V'] + precast > 0) then
-                cast_song('Valor Minuet V','<me>',JA_WS_lock,buffs)
-            elseif setting.madrigal == 2 and spell_recasts[399] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Sword Madrigal'] or os.time() - timers.AoE['Sword Madrigal'] + precast > 0) then
-                cast_song('Sword Madrigal','<me>',JA_WS_lock,buffs)
-            elseif setting.madrigal >= 1 and spell_recasts[400] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Blade Madrigal'] or os.time() - timers.AoE['Blade Madrigal'] + precast > 0) then
-               cast_song('Blade Madrigal','<me>',JA_WS_lock,buffs)	
-            elseif setting.prelude == 2 and spell_recasts[401] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Hunter\'s Prelude'] or os.time() - timers.AoE['Hunter\'s Prelude'] + precast > 0) then
-                cast_song('Hunter\'s Prelude','<me>',JA_WS_lock,buffs)
-            elseif setting.prelude >= 1 and spell_recasts[402] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Archer\'s Prelude'] or os.time() - timers.AoE['Archer\'s Prelude'] + precast > 0) then
-               cast_song('Archer\'s Prelude','<me>',JA_WS_lock,buffs)	
-            elseif setting.scherzo ~= 0 and spell_recasts[470] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Sentinel\'s Scherzo'] or os.time() - timers.AoE['Sentinel\'s Scherzo'] + precast > 0) then
-                cast_song('Sentinel\'s Scherzo','<me>',JA_WS_lock,buffs)
-            elseif setting.ballad == 3 and spell_recasts[386] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Mage\'s Ballad'] or os.time() - timers.AoE['Mage\'s Ballad'] + precast > 0) then
-                cast_song('Mage\'s Ballad','<me>',JA_WS_lock,buffs)
-            elseif setting.ballad >= 2 and spell_recasts[387] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Mage\'s Ballad  II'] or os.time() - timers.AoE['Mage\'s Ballad II'] + precast > 0) then
-                cast_song('Mage\'s Ballad II','<me>',JA_WS_lock,buffs)
-            elseif setting.ballad >= 1 and spell_recasts[388] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Mage\'s Ballad III'] or os.time() - timers.AoE['Mage\'s Ballad III'] + precast > 0) then
-                cast_song('Mage\'s Ballad III','<me>',JA_WS_lock,buffs)               
-            elseif setting.mazurka ~= 0 and spell_recasts[465] <= recast_minimum and aoe_range and 
-            (not timers.AoE['Chocobo Mazurka'] or os.time() - timers.AoE['Chocobo Mazurka'] + precast > 0) then
-                cast_song('Chocobo Mazurka','<me>',JA_WS_lock,buffs)
-            elseif setting.pianissimo then
+            for k,v in pairs(setting.songs) do
+                --if buff_ids:find(k:ucfirst()) then
+                local action = check_aoe(k:ucfirst(),targ,JA_WS_lock,buffs)
+                if action then
+                    cast_song(action,'<me>',JA_WS_lock,buffs)
+                    return
+                end
+                --end
+            end
+            if setting.pianissimo then
                 for targ,songs in pairs(setting.song) do
-                    for ind,song in ipairs(songs) do    
-                        if base_songs == 4 and timers[targ] and table.length(timers[targ]) == maxsongs-2 and valid_target(targ,20) and spell_recasts[406] <= recast_minimum then
-                            cast_song('Herb Pastoral',targ,JA_WS_lock,buffs)
+                    for ind,song in ipairs(songs) do
+                        if base_songs == 4 and timers[targ] and table.length(timers[targ]) == maxsongs-2 and valid_target(targ,20) and spell_recasts[get_song(setting.dummy1)] <= recast_minimum then
+                            cast_song(setting.dummy1,targ,JA_WS_lock,buffs)
                             return
-                        elseif base_songs == 3 and timers[targ] and table.length(timers[targ]) == maxsongs-1 and valid_target(targ,20) and spell_recasts[414] <= recast_minimum then
-                            cast_song('Warding Round',targ,JA_WS_lock,buffs)  
+                        elseif base_songs == 3 and timers[targ] and table.length(timers[targ]) == maxsongs-1 and valid_target(targ,20) and spell_recasts[get_song(setting.dummy2)] <= recast_minimum then
+                            cast_song(setting.dummy2,targ,JA_WS_lock,buffs)  
                             return
                         elseif setting.song[targ][ind] and spell_recasts[get_song(song)] <= recast_minimum and valid_target(targ,20) and
                           (not timers[targ] or not timers[targ][song] or os.time() - timers[targ][song] + precast > 0) then
@@ -174,36 +174,6 @@ windower.register_event('prerender',function ()
         end
     end
 end)
-
-buff_song = {
-    ballad={
-        [1]='Mage\'s Ballad III',
-        [2]='Mage\'s Ballad II',
-        [3]='Mage\'s Ballad',
-        },
-    march={
-        [1]='Victory March',
-        [2]='Advancing March',
-        },
-    minuet={
-        [1]='Valor Minuet V',
-        [2]='Valor Minuet IV',
-        [3]='Valor Minuet III',
-        [4]='Valor Minuet II',
-        [5]='Valor Minuet',
-        },
-    madrigal={
-        [1]='Blade Madrigal',
-        [2]='Sword Madrigal',
-        },
-    prelude={
-        [1]='Archer\'s Prelude',
-        [2]='Hunter\'s Prelude',
-        },
-    scherzo={
-        [1]='Sentinel\'s Scherzo',
-        },
-    }
 
 function get_coords()
     local play = windower.ffxi.get_mob_by_target('me')
@@ -229,12 +199,13 @@ function play_move()
     return false
 end
 
-function get_song_buff(song)
-    for buff,songs in pairs(buff_song) do
-        for ind,song_name in pairs(songs) do
-            if song_name:lower() == song:lower() then
-                return buff--,ind
-            end
+function check_aoe(buff,targ,JA_WS_lock,buffs)
+    local buff_n = setting[buff:lower()]
+    for x = 1,buff_n do
+        local song = buff_songs[buff][x] 
+        if song and spell_recasts[get_song(song)] <= recast_minimum and 
+          (not timers['AoE'][song] or os.time() - timers['AoE'][song] + precast > 0) then
+            return song
         end
     end
     return nil
@@ -263,16 +234,25 @@ windower.register_event('addon command', function(...)
             windower.add_to_chat(207, 'settings saved.')
         elseif commands[1] == 'eval' then
              assert(loadstring(table.concat(commands, ' ',1)))()
+        elseif buff_songs[commands[1]:ucfirst()] then
+            if commands[2] ~= '0' and commands[2] ~= 'off' then
+                setting.songs[commands[1]] = tonumber(commands[2])
+            else
+                setting.songs[commands[1]] = nil
+            end
         elseif type(setting[commands[1]]) == 'number' and tonumber(commands[2]) then
             setting[commands[1]] = tonumber(commands[2])
+            windower.add_to_chat(207, '%s is now set to %d':format(commands[1],setting[commands[1]]))
         elseif type(setting[commands[1]]) == 'string' then
-            setting[commands[1]] = table.concat(commands, ' ',1):lower()	
+            setting[commands[1]] = table.concat(commands, ' ',1):lower()
+             windower.add_to_chat(207, '%s is now set to %s':format(commands[1],setting[commands[1]]))
         elseif type(setting[commands[1]]) == 'boolean' then
             if not commands[2] and setting[commands[1]] == true or commands[2] and commands[2]:lower() == 'off' then
                 setting[commands[1]] = false
             elseif not commands[2] or commands[2] and commands[2]:lower() == 'on' then
                 setting[commands[1]] = true 
             end
+            windower.add_to_chat(207, '%s is now %s':format(commands[1],setting[commands[1]] and 'On' or 'Off'))
         elseif commands[1] == 'song' then
             if commands[#commands] == '+' then
                 local player = windower.ffxi.get_mob_by_name(commands[2]:ucfirst()).name
@@ -296,14 +276,17 @@ windower.register_event('addon command', function(...)
                     windower.add_to_chat(207, 'Pianissimo %s is not set for %s.':format(song,player))
                 end
             end
+            for k,v in pairs(setting.song) do
+                print(k,v)
+            end
         elseif commands[1] == 'aoe' then
             if commands[#commands] == '+' then
                 local player = windower.ffxi.get_mob_by_name(commands[2]:ucfirst()).name
                 if not setting.aoe:find(player) then
                     setting.aoe:append(player)
-                    windower.add_to_chat(207, 'Will now check if %s is in AoE range.':format(player))
+                    windower.add_to_chat(207, 'Will now check if %s is in AoE range before casting.':format(player))
                 else
-                    windower.add_to_chat(207, '%s is already being watched.':format(player))
+                    windower.add_to_chat(207, '%s\'s range is already being watched.':format(player))
                 end
             elseif commands[#commands] == '-' then
                 local player = windower.ffxi.get_mob_by_name(commands[2]:ucfirst()).name
@@ -312,12 +295,27 @@ windower.register_event('addon command', function(...)
                     setting.aoe:remove(ind)
                     windower.add_to_chat(207, '%s will now be ignored for AoE.':format(player))
                 else
-                    windower.add_to_chat(207, '%s is not being watched.':format(player))
+                    windower.add_to_chat(207, '%s\'s range is not being watched.':format(player))
                 end
             end
+            print(setting.aoe)
         end
     end
-    windower.add_to_chat(207, 'March x%s  Minuet x%s  Madrigal x%s Prelude x%s Ballad x %s Scherzo x%s\nactions %s clarion [%s] marcato [%s] delay %s':format(setting.march,setting.minuet,setting.madrigal,setting.prelude,setting.ballad,setting.scherzo,setting.actions == true and '[on]' or '[off]',setting.clarion,setting.marcato,setting.delay))
+    bard_status:text(display_box())
+    local str = ''
+    for k,v in pairs(setting.songs) do
+        str = str..'%s x%d ':format(k:ucfirst(),v)
+    end
+    for k,v in pairs(default) do
+        if k == 'pianissimo' then
+            str = str..'%s:[%s] ':format(k:ucfirst(),setting[k] and 'On' or 'Off')
+        elseif type(v) == 'string' then
+            str = str..'%s:[%s] ':format(k:ucfirst(),setting[k]:ucfirst())
+        elseif type(v) == 'number' then
+            str = str..'%s:[%d] ':format(k:ucfirst(),setting[k])
+        end
+    end
+    windower.add_to_chat(207, str)
 end)
 
 function calculate_buffs(curbuffs)
@@ -405,30 +403,31 @@ function find_extra_song_harp()
     end
 end
 find_extra_song_harp()
+
 function equip(slot)
     local item = windower.ffxi.get_items().equipment
-    return windower.ffxi.get_items(item[slot..'_bag'],item[slot]).id
+    return equipment[windower.ffxi.get_items(item[slot..'_bag'],item[slot]).id] or ''
 end
 
 function calculate_duration(name,buffs)
     local mult = 1
-    if equipment[equip('range')] == 'Daurdabla' then mult = mult + 0.3 end    -- 0.25 for 90, 0.3 for 99
-    if equipment[equip('range')] == 'Gjallarhorn' then mult = mult + 0.4 end  -- 0.3 for 95, 0.4 for 99
-    if equipment[equip('main')] == 'Carnwenhan' then mult = mult + 0.5 end    -- 0.1 for 75, 0.4 for 95, 0.5 for 99/119
-    if equipment[equip('main')] == 'Legato Dagger' then mult = mult + 0.05 end
-    if equipment[equip('sub')] == "Legato Dagger" then mult = mult + 0.05 end
-    if equipment[equip('neck')] == 'Aoidos\' Matinee' then mult = mult + 0.1 end
-    if equipment[equip('body')] == 'Aoidos\' Hngrln. +2' then mult = mult + 0.1 end
-    if equipment[equip('legs')] == 'Mdk. Shalwar +1' then mult = mult + 0.1 end
-    if equipment[equip('feet')] == "Brioso Slippers" then mult = mult + 0.1 end
-    if equipment[equip('feet')] == "Brioso Slippers +1" then mult = mult + 0.11 end
-    if string.find(name,'March') and equipment[equip('hands')] == 'Ad. Mnchtte. +2' then mult = mult + 0.1 end
-    if string.find(name,'Minuet') and equipment[equip('body')] == 'Aoidos\' Hngrln. +2' then mult = mult + 0.1 end
-    if string.find(name,'Madrigal') and equipment[equip('head')] == 'Aoidos\' Calot +2' then mult = mult + 0.1 end
-    if string.find(name,'Ballad') and equipment[equip('legs')] == 'Aoidos\' Rhing. +2' then mult = mult + 0.1 end
-    if string.find(name,'Scherzo') and equipment[equip('feet')] == 'Aoidos\' Cothrn. +2' then mult = mult + 0.1 end
-    if string.find(name,'Paeon') and equipment[equip('head')] == "Brioso Roundlet" then mult = mult + 0.1 end
-    if string.find(name,'Paeon') and equipment[equip('head')] == "Brioso Roundlet +1" then mult = mult + 0.1 end
+    if equip('range') == 'Daurdabla' then mult = mult + 0.3 end    -- 0.25 for 90, 0.3 for 99
+    if equip('range') == 'Gjallarhorn' then mult = mult + 0.4 end  -- 0.3 for 95, 0.4 for 99
+    if equip('main') == 'Carnwenhan' then mult = mult + 0.5 end    -- 0.1 for 75, 0.4 for 95, 0.5 for 99/119
+    if equip('main') == 'Legato Dagger' then mult = mult + 0.05 end
+    if equip('sub') == 'Legato Dagger' then mult = mult + 0.05 end
+    if equip('neck') == 'Aoidos\' Matinee' then mult = mult + 0.1 end
+    if equip('body') == 'Aoidos\' Hngrln. +2' then mult = mult + 0.1 end
+    if equip('legs') == 'Mdk. Shalwar +1' then mult = mult + 0.1 end
+    if equip('feet') == 'Brioso Slippers' then mult = mult + 0.1 end
+    if equip('feet') == 'Brioso Slippers +1' then mult = mult + 0.11 end
+    if string.find(name,'March') and equip('hands') == 'Ad. Mnchtte. +2' then mult = mult + 0.1 end
+    if string.find(name,'Minuet') and equip('body') == 'Aoidos\' Hngrln. +2' then mult = mult + 0.1 end
+    if string.find(name,'Madrigal') and equip('head') == 'Aoidos\' Calot +2' then mult = mult + 0.1 end
+    if string.find(name,'Ballad') and equip('legs') == 'Aoidos\' Rhing. +2' then mult = mult + 0.1 end
+    if string.find(name,'Scherzo') and equip('feet') == 'Aoidos\' Cothrn. +2' then mult = mult + 0.1 end
+    if string.find(name,'Paeon') and equip('head') == 'Brioso Roundlet' then mult = mult + 0.1 end
+    if string.find(name,'Paeon') and equip('head') == 'Brioso Roundlet +1' then mult = mult + 0.1 end
     if buffs.troubadour then
         mult = mult*2
     end
@@ -443,11 +442,10 @@ end
 windower.register_event('incoming chunk', function(id,original,modified,injected,blocked)
     if id == 0x028 then
         local packet = packets.parse('incoming', original)
-        --table.vprint(packet)
-        local play = windower.ffxi.get_player()
-        local actor_name = windower.ffxi.get_mob_by_id(packet['Actor'])['name']
-        local targ_name = windower.ffxi.get_mob_by_id(packet['Target 1 ID'])['name']
-        if packet['Category'] == 8 and actor_name == play.name then
+        local play = windower.ffxi.get_player().name
+        local targ = windower.ffxi.get_mob_by_id(packet['Target 1 ID']).name
+        local actor = windower.ffxi.get_mob_by_id(packet['Actor']).name
+        if packet['Category'] == 8 and actor == play then
             if (packet['Param'] == 24931) then
             -- Begin Casting
                 casting = true
@@ -456,7 +454,7 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
                 casting = false
                 del = 1
             end
-        elseif packet['Category'] == 4 and actor_name == play.name then
+        elseif packet['Category'] == 4 and actor == play then
             -- Finish Casting
             casting = false
             del = setting.delay
@@ -470,29 +468,30 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
                 local targ_name = windower.ffxi.get_mob_by_id(packet['Target '..x..' ID']).name
                 adjust_timers(spell_name,dur,targ_name)
             end
-        elseif packet['Category'] == 7 and actor_name == play.name then
+        elseif packet['Category'] == 7 and actor == play then
             casting = true
-        elseif packet['Category'] == 9 and actor_name == play.name then
+        elseif packet['Category'] == 9 and actor == play then
             casting = true
-        elseif packet['Category'] == 3 and actor_name == play.name then
+        elseif packet['Category'] == 3 and actor == play then
             casting = false
-        elseif packet['Category'] == 5 and actor_name == play.name then
+        elseif packet['Category'] == 5 and actor == play then
             casting = false
         end
     elseif id == 0x029 then
         local packet = packets.parse('incoming', original)
-        local play = windower.ffxi.get_player()
-        local actor_name = windower.ffxi.get_mob_by_id(packet['Actor'])['name']
-        local targ_name = windower.ffxi.get_mob_by_id(packet['Target'])['name']
-        if (packet.Message) == 206 and actor_name == play.name then
-            print(targ_name,res.buffs[packet['Param 1']].english:lower())
-            find_lost_buff(targ_name,res.buffs[packet['Param 1']].english:lower())
+        --table.vprint(packet)
+        local play = windower.ffxi.get_player().name
+        local targ = windower.ffxi.get_mob_by_id(packet['Target']).name
+        local actor = windower.ffxi.get_mob_by_id(packet['Actor']).name
+        if (packet.Message) == 206 and actor == play then
+            --print(targ_name,res.buffs[packet['Param 1']].en)
+            buff_lost(targ,res.buffs[packet['Param 1']].en)
         end
     end
 end)
 
-function find_lost_buff(targ,buff)
-    local buff = buff_song[buff]
+function buff_lost(targ,buff)
+    local buff = buff_songs[buff]
     if not buff or not timers[targ] then return end
     local minimum,song
     for k,song_name in pairs(buff) do
@@ -541,7 +540,7 @@ function adjust_timers(spell_name,dur,targ)
         end
     else
         local maxsongs = 2
-        if equipment[equip('range')] == 'Daurdabla' or equipment[equip('range')] == 'Terpander' then
+        if equip('range') == 'Daurdabla' or equip('range') == 'Terpander' then
             maxsongs = base_songs
         end
         maxsongs = aug_maxsongs(targ,maxsongs,buffs)
@@ -592,6 +591,7 @@ function status_change(new,old)
     if new == 2 or new == 3 then
         reset_timers()
         setting.actions = false
+        bard_status:text(display_box())
     end
 end
 
@@ -599,6 +599,7 @@ function zone_change()
     setting.actions = false
     casting = false
     reset_timers()
+    bard_status:text(display_box())
 end
 
 windower.register_event('unload', reset_timers)
