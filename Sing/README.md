@@ -14,25 +14,16 @@ instruments, (if found in inventory/wardrobe.) and applies it to your song limit
 	//sing delay [n]	-- [n] delay between song casting
 	//sing precast [n] 	-- recast songs [n] seconds before songs wears
 	//sing display [on/off]		-- Dislay custom song timers
-	//sing clarion [song_type.] -- set extra clarion song here*
+	//sing clarion [buff_name] -- set extra clarion song here*
 	//sing marcato [song name]  -- set song to use following marcato**
 	//sing pianissimo [on/off]	-- toggles pianissimo songs.
 	//sing song [player_name] [song name] [+/-]	-- Add or remove pianissimo songs**
 	//sing aoe [player_name] [+/-]	-- Add players to aoe watch list(will not sing AoE songs if 
 	specified players are not in range, optional.)
-
-Songs Types Currently supported and thier maximum values:
- 
-	March x2
-	Minuet x4 (minuets 2-5)
-	Madrigal x2
-	Scherzo x1
-	Prelude x1
-	Ballad x3
  
 To configure songs use:
 	
-	//sing [song type] [number] 
+	//sing [buff_name] [number] 
 	e.g. //sing march 2 - sets number of marches to 2.*
 
 To turn a song off use :
@@ -41,7 +32,8 @@ To turn a song off use :
 	e.g. //sing madrigal 0 - sets number of madrigals to 0 madrigals will not be used.*
 	
 	
-*[song_type] march, minuet, madrigal, scherzo, prelude, ballad, mazurka
+*[buff_name] name of buff, currently supports all bard buffs excluding etudes and carols
+e.g march, minuet, madrigal, scherzo, prelude, ballad, mazurka are all valid buff names
 	
 **[song name] name of song as it appears in game, not case sensitive.
 
