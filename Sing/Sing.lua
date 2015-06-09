@@ -145,6 +145,13 @@ windower.register_event('prerender',function ()
             Magic_lock = true
         end
         if not Magic_lock then
+            if base_songs == 4 and table.length(timers.AoE) == maxsongs-2 and aoe_range and not buffs[song_to_buff(setting.dummy1)] and spell_recasts[get_song(setting.dummy1)] <= recast_minimum then
+                cast_song(setting.dummy1,'<me>',JA_WS_lock,buffs)
+                return
+            elseif base_songs == 3 and table.length(timers.AoE) == maxsongs-1 and aoe_range and not buffs[song_to_buff(setting.dummy2)] and spell_recasts[get_song(setting.dummy2)] <= recast_minimum then
+                cast_song(setting.dummy2,'<me>',JA_WS_lock,buffs)
+                return
+            end
             for k,v in pairs(setting.songs) do
                 --if buff_ids:find(k:ucfirst()) then
                 local action = check_aoe(k:ucfirst(),targ,JA_WS_lock,buffs)
@@ -187,13 +194,13 @@ end
 function play_move()
     local coords = get_coords()
     local clock = os.clock()
-    lastcoords = lastcoords and lastcoords or get_coords()
+    lastcoords = lastcoords and lastcoords or coords
     if lastcoords[1] ~= coords[1] or lastcoords[2] ~= coords[2] or lastcoords[3] ~= coords[3] then
         lastcoords = coords
         ts = clock
         return true
     end
-    if ts and ts+0.5>clock then
+    if ts and ts+1>clock then
         return true
     end
     return false
@@ -359,6 +366,14 @@ function aoe_check()
         end
     end
     return true
+end
+
+function song_to_buff(song,bool)
+    for id,buff in ipairs(buff_ids) do
+        if string.find(song,buff) then
+            return bool and id,buff or buff
+        end
+    end
 end
 
 function get_song(song)
