@@ -2,8 +2,8 @@
 ### Automates casting of bard buff songs.
 
 Configure songs with commands, calculates song duration based on active job abilities and gear equipped 
-at the endcast, checks active song buffs casted by player (as recorded by the addon) and detects song+ 
-instruments, (if found in inventory/wardrobe.) and applies it to your song limit. Uses Warding Round and Herb Pastoral as 3rd and 4th dummy songs respectively, a toggle for user defined dummy songs is planned.
+at the endcast, supports two dummy songs, checks active song buffs casted by player (as recorded by the addon) and detects song+ 
+instruments, (if found in inventory/wardrobe.) and applies it to your song limit.
 
 ##### Commands:
 
@@ -17,6 +17,8 @@ instruments, (if found in inventory/wardrobe.) and applies it to your song limit
 	//sing clarion [buff_name] -- set extra clarion song here*
 	//sing marcato [song name]  -- set song to use following marcato**
 	//sing pianissimo [on/off]	-- toggles pianissimo songs.
+	//sing dummy1 [song name]	-- set dummy song**
+	//sing dummy2 [song name]	-- second dummy song, ignored if you do not own the proper equipment.
 	//sing song [player_name] [song name] [+/-]	-- Add or remove pianissimo songs**
 	//sing aoe [player_name] [+/-]	-- Add players to aoe watch list(will not sing AoE songs if 
 	specified players are not in range, optional.)
