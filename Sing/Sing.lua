@@ -611,7 +611,7 @@ function zone_change()
     bard_status:text(display_box())
 end
 
-windower.register_event('job change', change)
+windower.register_event('job change','logout', change)
 windower.register_event('unload', reset_timers)
 windower.register_event('zone change', zone_change)
 windower.register_event('status change', status_change)
