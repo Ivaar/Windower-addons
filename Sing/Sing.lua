@@ -82,9 +82,9 @@ buff_ids = L{
     }
 
 buff_songs = {
-    Paeon = {[1]='Army\'s Paeon V',[2]='Army\'s Paeon  IV',[3]='Army\'s Paeon  III',[4]='Army\'s Paeon  II',[5]='Army\'s Paeon',[6]='Army\'s Paeon'},
+    Paeon = {[1]='Army\'s Paeon VI',[2]='Army\'s Paeon V',[3]='Army\'s Paeon IV',[4]='Army\'s Paeon III',[5]='Army\'s Paeon II',[6]='Army\'s Paeon'},
     Ballad = {[1]='Mage\'s Ballad III',[2]='Mage\'s Ballad II',[3]='Mage\'s Ballad'},
-    Minne = {[1]='Knight\'s Minne V',[2]='Knight\'s Minne  IV',[3]='Knight\'s Minne  III',[4]='Knight\'s Minne  II',[5]='Knight\'s Minne'},
+    Minne = {[1]='Knight\'s Minne V',[2]='Knight\'s Minne IV',[3]='Knight\'s Minne III',[4]='Knight\'s Minne II',[5]='Knight\'s Minne'},
     Minuet = {[1]='Valor Minuet V',[2]='Valor Minuet IV',[3]='Valor Minuet III',[4]='Valor Minuet II',[5]='Valor Minuet'}, 
     Madrigal = {[1]='Blade Madrigal',[2]='Sword Madrigal'},
     Prelude = {[1]='Archer\'s Prelude',[2]='Hunter\'s Prelude'},
@@ -137,50 +137,56 @@ windower.register_event('prerender',function ()
         local spell_recasts = windower.ffxi.get_spell_recasts()
         local precast = math.random(setting.precast,setting.precast+10)+math.random()
         local aoe_range = aoe_check()
-        if buffs.terror or buffs.stun or buffs.sleep or buffs.petrification or buffs.charm or casting or moving then return end
-        if buffs.amnesia then
+        if moving or casting or buffs.stun or buffs.sleep or buffs.charm or buffs.terror or buffs.petrification then return end
+        if buffs.amnesia or buffs.impairment then
             JA_WS_lock = true
         end
-        if buffs.silence or buffs.mute then
+        if buffs.silence or buffs.mute or buffs.omerta then
             Magic_lock = true
         end
         if not Magic_lock then
-            if base_songs == 4 and table.length(timers.AoE) == maxsongs-2 and aoe_range and not buffs[song_to_buff(setting.dummy1)] and spell_recasts[get_song(setting.dummy1)] <= recast_minimum then
-                cast_song(setting.dummy1,'<me>',JA_WS_lock,buffs)
-                return
-            elseif base_songs == 3 and table.length(timers.AoE) == maxsongs-1 and aoe_range and not buffs[song_to_buff(setting.dummy2)] and spell_recasts[get_song(setting.dummy2)] <= recast_minimum then
-                cast_song(setting.dummy2,'<me>',JA_WS_lock,buffs)
-                return
-            end
-            for k,v in pairs(setting.songs) do
-                --if buff_ids:find(k:ucfirst()) then
-                local action = check_aoe(k:ucfirst(),targ,JA_WS_lock,buffs)
-                if action then
-                    cast_song(action,'<me>',JA_WS_lock,buffs)
-                    return
+            if aoe_range then
+                if apply_dummy('AoE',maxsongs,spell_recasts,JA_WS_lock,buffs) then return end
+                for buff,num in pairs(setting.songs) do
+                    buff = buff:ucfirst()
+                    for x = 1,num do
+                        local song = buff_songs[buff][x] 
+                        if song and spell_recasts[get_song_id(song)] <= recast_minimum and 
+                           (not timers['AoE'][song] or os.time() - timers['AoE'][song] + precast > 0) then--not buffs[buff] or buffs[buff] < x 
+                            cast_song(song,'<me>',JA_WS_lock,buffs)
+                            return
+                        end
+                    end
                 end
-                --end
             end
             if setting.pianissimo then
                 for targ,songs in pairs(setting.song) do
-                    for ind,song in ipairs(songs) do
-                        if base_songs == 4 and timers[targ] and table.length(timers[targ]) == maxsongs-2 and valid_target(targ,20) and spell_recasts[get_song(setting.dummy1)] <= recast_minimum then
-                            cast_song(setting.dummy1,targ,JA_WS_lock,buffs)
-                            return
-                        elseif base_songs == 3 and timers[targ] and table.length(timers[targ]) == maxsongs-1 and valid_target(targ,20) and spell_recasts[get_song(setting.dummy2)] <= recast_minimum then
-                            cast_song(setting.dummy2,targ,JA_WS_lock,buffs)  
-                            return
-                        elseif setting.song[targ][ind] and spell_recasts[get_song(song)] <= recast_minimum and valid_target(targ,20) and
-                          (not timers[targ] or not timers[targ][song] or os.time() - timers[targ][song] + precast > 0) then
-                            cast_song(song,targ,JA_WS_lock,buffs)
-                            return
+                    if valid_target(targ,20) then
+                        if apply_dummy(targ,maxsongs,spell_recasts,JA_WS_lock,buffs) then return end                    
+                        for ind,song in ipairs(songs) do
+                            if setting.song[targ][ind] and spell_recasts[get_song_id(song)] <= recast_minimum and
+                               (not timers[targ] or not timers[targ][song] or os.time() - timers[targ][song] + precast > 0) then
+                                cast_song(song,targ,JA_WS_lock,buffs)
+                                return
+                            end
                         end
                     end
                 end
             end
         end
     end
-end)
+end) 
+
+function apply_dummy(targ,maxsongs,spell_recasts,JA_WS_lock,buffs)
+    if base_songs == 4 and timers[targ] and table.length(timers[targ]) == maxsongs-2 and spell_recasts[get_song_id(setting.dummy2)] <= recast_minimum then
+        cast_song(setting.dummy2,targ == 'AoE' and '<me>' or targ,JA_WS_lock,buffs)
+        return true
+    elseif base_songs >= 3 and timers[targ] and table.length(timers[targ]) == maxsongs-1 and spell_recasts[get_song_id(setting.dummy1)] <= recast_minimum then
+        cast_song(setting.dummy1,targ == 'AoE' and '<me>' or targ,JA_WS_lock,buffs)  
+        return true
+    end
+    return false
+end
 
 function get_coords()
     local play = windower.ffxi.get_mob_by_target('me')
@@ -195,27 +201,9 @@ function play_move()
     local coords = get_coords()
     local clock = os.clock()
     lastcoords = lastcoords and lastcoords or coords
-    if lastcoords[1] ~= coords[1] or lastcoords[2] ~= coords[2] or lastcoords[3] ~= coords[3] then
-        lastcoords = coords
-        ts = clock
-        return true
-    end
-    if ts and ts+1>clock then
-        return true
-    end
+    for x=1,3 do if lastcoords[x] ~= coords[x] then lastcoords=coords ts=clock return true end end
+    if ts and ts+1>clock then return true end
     return false
-end
-
-function check_aoe(buff,targ,JA_WS_lock,buffs)
-    local buff_n = setting[buff:lower()]
-    for x = 1,buff_n do
-        local song = buff_songs[buff][x] 
-        if song and spell_recasts[get_song(song)] <= recast_minimum and 
-          (not timers['AoE'][song] or os.time() - timers['AoE'][song] + precast > 0) then
-            return song
-        end
-    end
-    return nil
 end
 
 function valid_target(targ,dst)
@@ -251,7 +239,7 @@ windower.register_event('addon command', function(...)
             setting[commands[1]] = tonumber(commands[2])
             windower.add_to_chat(207, '%s is now set to %d':format(commands[1],setting[commands[1]]))
         elseif type(setting[commands[1]]) == 'string' then
-            setting[commands[1]] = table.concat(commands, ' ',1):lower()
+            setting[commands[1]] = table.concat(commands, ' ',2):lower()
              windower.add_to_chat(207, '%s is now set to %s':format(commands[1],setting[commands[1]]))
         elseif type(setting[commands[1]]) == 'boolean' then
             if not commands[2] and setting[commands[1]] == true or commands[2] and commands[2]:lower() == 'off' then
@@ -291,7 +279,7 @@ windower.register_event('addon command', function(...)
                 local player = windower.ffxi.get_mob_by_name(commands[2]:ucfirst()).name
                 if not setting.aoe:find(player) then
                     setting.aoe:append(player)
-                    windower.add_to_chat(207, 'Will now check if %s is in AoE range before casting.':format(player))
+                    windower.add_to_chat(207, 'Will now ensure %s is in AoE casting range.':format(player))
                 else
                     windower.add_to_chat(207, '%s\'s range is already being watched.':format(player))
                 end
@@ -360,7 +348,7 @@ function cast_song(str,ta,JA_WS_lock,buffs)
 end
 
 function aoe_check()
-    for k,v in pairs(setting.aoe) do
+    for k,v in ipairs(setting.aoe) do
         if not valid_target(v,10) then
             return false
         end
@@ -376,22 +364,24 @@ function song_to_buff(song,bool)
     end
 end
 
-function get_song(song)
-    if tonumber(song) then
-        for k,v in pairs(song_id) do
-            if k == song then
-                return v
-            end
-        end
-    elseif tostring(song) then
-        for k,v in pairs(song_id) do
-            if v:lower() == song:lower() then
-                return k
-            end
+function get_song_id(song)
+    for k,v in pairs(song_id) do
+        if v:lower() == song:lower() then
+            return k
         end
     end
     return nil
 end
+
+function get_song_name(song)
+    for k,v in pairs(song_id) do
+        if k == song then
+            return v
+        end
+    end
+    return nil
+end
+
 
 function find_item(id)
     local items = windower.ffxi.get_items()
@@ -457,10 +447,10 @@ end
 windower.register_event('incoming chunk', function(id,original,modified,injected,blocked)
     if id == 0x028 then
         local packet = packets.parse('incoming', original)
-        local play = windower.ffxi.get_player().name
+        local play = windower.ffxi.get_player()
         local targ = windower.ffxi.get_mob_by_id(packet['Target 1 ID']).name
         local actor = windower.ffxi.get_mob_by_id(packet['Actor']).name
-        if packet['Category'] == 8 and actor == play then
+        if packet['Category'] == 8 and actor == play.name then
             if (packet['Param'] == 24931) then
             -- Begin Casting
                 casting = true
@@ -469,7 +459,7 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
                 casting = false
                 del = 1
             end
-        elseif packet['Category'] == 4 and actor == play then
+        elseif packet['Category'] == 4 and actor == play.name then
             -- Finish Casting
             casting = false
             del = setting.delay
@@ -483,13 +473,13 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
                 local targ_name = windower.ffxi.get_mob_by_id(packet['Target '..x..' ID']).name
                 adjust_timers(spell_name,dur,targ_name)
             end
-        elseif packet['Category'] == 7 and actor == play then
+        elseif packet['Category'] == 7 and actor == play.name then
             casting = true
-        elseif packet['Category'] == 9 and actor == play then
+        elseif packet['Category'] == 9 and actor == play.name then
             casting = true
-        elseif packet['Category'] == 3 and actor == play then
+        elseif packet['Category'] == 3 and actor == play.name then
             casting = false
-        elseif packet['Category'] == 5 and actor == play then
+        elseif packet['Category'] == 5 and actor == play.name then
             casting = false
         end
     elseif id == 0x029 then
@@ -601,12 +591,16 @@ function reset_timers()
     casting = false
 end
 
+function change()
+    setting.actions = false
+    reset_timers()
+    bard_status:text(display_box())
+end
+
 function status_change(new,old)
     casting = false
     if new == 2 or new == 3 then
-        reset_timers()
-        setting.actions = false
-        bard_status:text(display_box())
+        change()
     end
 end
 
@@ -617,6 +611,7 @@ function zone_change()
     bard_status:text(display_box())
 end
 
+windower.register_event('job change', change)
 windower.register_event('unload', reset_timers)
 windower.register_event('zone change', zone_change)
 windower.register_event('status change', status_change)
