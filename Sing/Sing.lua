@@ -133,7 +133,6 @@ windower.register_event('prerender',function ()
         local moving = play_move()
         local buffs = calculate_buffs(play.buffs)
         local maxsongs = aug_maxsongs('AoE',base_songs,buffs)
-        local abil_recasts = windower.ffxi.get_ability_recasts()
         local spell_recasts = windower.ffxi.get_spell_recasts()
         local precast = math.random(setting.precast,setting.precast+10)+math.random()
         local aoe_range = aoe_check()
@@ -334,15 +333,17 @@ function use_MA(str,ta)
 end
 
 function cast_song(str,ta,JA_WS_lock,buffs)
-    if not JA_WS_lock and not buffs.nightingale and windower.ffxi.get_ability_recasts()[109] <= recast_minimum then
+    local recasts = windower.ffxi.get_ability_recasts()
+    if not JA_WS_lock and not buffs.nightingale and recasts[109] <= recast_minimum then
         use_JA('input /ja "Nightingale" <me>')
-    elseif not JA_WS_lock and not buffs.troubadour and windower.ffxi.get_ability_recasts()[110] <= recast_minimum then
+    elseif not JA_WS_lock and not buffs.troubadour and recasts[110] <= recast_minimum then
         use_JA('input /ja "Troubadour" <me>')
-    elseif not JA_WS_lock and str:lower() == setting.marcato and not buffs.marcato and not buffs['soul voice'] and windower.ffxi.get_ability_recasts()[48] <= recast_minimum then
+        renew_timers()
+    elseif not JA_WS_lock and str:lower() == setting.marcato and not buffs.marcato and not buffs['soul voice'] and recasts[48] <= recast_minimum then
         use_JA('input /ja "Marcato" <me>')
-    elseif ta ~= '<me>' and not buffs.pianissimo then
+    elseif ta ~= '<me>' and not buffs.pianissimo and recasts[112] <= recast_minimum then
          use_JA('input /ja "Pianissimo" <me>')
-    else
+    elseif ta == '<me>' or ta ~= '<me>' and buffs.pianissimo then
         use_MA(str,ta)
     end
 end
@@ -523,6 +524,16 @@ function update_timers(targ)
     for song_name,expires in pairs(temp_timer_list) do
         timers[targ][song_name] = nil
     end
+end
+
+function renew_timers()
+    local times = {}
+    local ind = 1
+    for k,v in pairs(timers) do
+        times[tostring(ind)] = v
+        ind=ind+1
+    end
+    timers = times
 end
 
 function aug_maxsongs(targ,maxsongs,buffs)
