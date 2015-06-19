@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.15.06.16'
+_addon.version = '1.15.06.18'
 
 require('pack')
 packets = require('packets')
@@ -11,50 +11,53 @@ config = require('config')
 
 default = {
     delay=4,
-    dummy1='Knight\'s Minne',
-    dummy2='Knight\'s Minne II',
-    marcato='valor minuet v',
+    dummy=L{'Knight\'s Minne','Knight\'s Minne II'},
+    buffs={['haste']={},['refresh']={}},
+    marcato='Sentinel\'s Scherzo',
     clarion={aoe='minuet'},
     actions=false,
     pianissimo=false,
     recast=20,
-    display = true,
+    active=true,
+    timers=true,
     aoe={},
     song={},
     songs={march=2},
-    min_ws_hp=20,
-    max_ws_hp=99,
-    text={}
+    min_ws=20,
+    max_ws=99,
+    box={text={size=10}}
     }
 
 setting = config.load(default)
 
 nexttime = os.clock()
 del = 0
-timers = {AoE = {},}
+timers = {AoE={},buffs={Haste={},Refresh={}}}
 
 equipment = L{
-    [21407] = 'Terpander',
+    [18571] = 'Daurdabla',--99
+    [18572] = 'Gjallarhorn',--99
+    [18575] = 'Daurdabla',--90
+    [18576] = 'Daurdabla',--95
+    [18839] = 'Daurdabla',--99-2
+    [18840] = 'Gjallarhorn',--99-2
     [20561] = 'Carnwenhan',--119
     [20562] = 'Carnwenhan',--119-2
     [20629] = 'Legato Dagger',
-    [18575] = 'Daurdabla',--90
-    [18576] = 'Daurdabla',--95
-    [18571] = 'Daurdabla',--99
-    [18839] = 'Daurdabla',--99-2
-    [18572] = 'Gjallarhorn',--99
-    [18840] = 'Gjallarhorn',--99-2
     [27672] = 'Brioso Roundlet',
     [27693] = 'Brioso Roundlet +1',
+    [28074] = 'Mdk. Shalwar +1',
     [28232] = 'Brioso Slippers',
     [28253] = 'Brioso Slippers +1',
-    [28074] = 'Mdk. Shalwar +1',
-    [11113] = 'Ad. Mnchtte. +2',
-    [11093] = 'Aoidos\' Hngrln. +2',
     [11073] = 'Aoidos\' Calot +2',
+    [11093] = 'Aoidos\' Hngrln. +2',
+    [11113] = 'Ad. Mnchtte. +2',
     [11133] = 'Aoidos\' Rhing. +2',
     [11153] = 'Aoidos\' Cothrn. +2',
     [11618] = 'Aoidos\' Matinee',
+    [21400] = 'Blurred Harp',
+    [21401] = 'Blurred Harp +1',    
+    [21407] = 'Terpander',
     [26758] = 'Fili Calot',
     [26759] = 'Fili Calot +1',
     [26916] = 'Fili Hongreline',
@@ -91,11 +94,17 @@ buff_ids = L{
     [221] = 'Dirge',
     [222] = 'Scherzo',
     }
-
+    
+buff_spells = L{
+    [57] = {id=57,enl='Haste',dur=180},
+    [109] = {id=109,enl='Refresh',dur=150},
+    }
+    
 buff_songs = {
     paeon = {[1]='Army\'s Paeon VI',[2]='Army\'s Paeon V',[3]='Army\'s Paeon IV',[4]='Army\'s Paeon III',[5]='Army\'s Paeon II',[6]='Army\'s Paeon'},
     ballad = {[1]='Mage\'s Ballad III',[2]='Mage\'s Ballad II',[3]='Mage\'s Ballad'},
     minne = {[1]='Knight\'s Minne V',[2]='Knight\'s Minne IV',[3]='Knight\'s Minne III',[4]='Knight\'s Minne II',[5]='Knight\'s Minne'},
+    march = {[1]='Victory March',[2]='Advancing March'},
     minuet = {[1]='Valor Minuet V',[2]='Valor Minuet IV',[3]='Valor Minuet III',[4]='Valor Minuet II',[5]='Valor Minuet'}, 
     madrigal = {[1]='Blade Madrigal',[2]='Sword Madrigal'},
     prelude = {[1]='Archer\'s Prelude',[2]='Hunter\'s Prelude'},
@@ -107,7 +116,6 @@ buff_songs = {
     capriccio = {[1]='Gold Capriccio'},
     round = {[1]='Warding Round'},
     gavotte = {[1]='Shining Fantasia'},
-    march = {[1]='Victory March',[2]='Advancing March'},
     hymnus = {[1]='Goddess\'s Hymnus'},
     mazurka = {[1]='Chocobo Mazurka'},
     sirvente = {[1]='Foe Sirvente'},
@@ -115,37 +123,65 @@ buff_songs = {
     scherzo = {[1]='Sentinel\'s Scherzo'},
     }
 
-display_box = function()
+local display_box = function()
+    local str
     if setting.actions then
-        return ' Singer [On] '
+        str = 'Singer: Actions [On]'
     else
-        return ' Singer [Off] '
+        str = 'Singer: Actions [Off]'
     end
+    if not setting.active then return str end
+    for k,v in pairs(setting.songs) do
+        str = str..'\n %s:[x%d]':format(k:ucfirst(),v)
+    end
+    str = str..'\n Clarion:[%s]\n Marcato:\n   [%s]':format(setting.clarion.aoe:ucfirst(),setting.marcato)
+    str = str..'\n Dummy Songs:\n   1:[%s]\n   2:[%s]\n Pianissimo:[%s]':format(setting.dummy[1],setting.dummy[2],setting.pianissimo and 'On' or 'Off')
+    for k,v in pairs(setting.song) do
+        str=str..'\n %s:':format(k:ucfirst())
+        for i,t in pairs(v) do
+            str = str..'\n   %s:[x%d]':format(i:ucfirst(),t)
+        end
+        if setting.clarion[k] then
+            str = str..'\n   Clarion:[%s]':format(setting.clarion[k]:ucfirst())
+        end
+    end
+    for k,v in pairs(setting.aoe) do
+        str = v and str..'\n AoE Target:[%s]':format(k:ucfirst()) or str
+    end
+    for k,v in pairs(setting.buffs.haste) do
+        if v then str = str..'\n Haste:[%s]':format(k:ucfirst()) end
+    end
+    for k,v in pairs(setting.buffs.refresh) do
+        if v then str = str..'\n Refresh:[%s]':format(k:ucfirst()) end
+    end
+    str = str..'\n Delay:[%s] Recast:[%s]\n WS:[ > %d%%][ < %s%%]':format(setting.delay,setting.recast,setting.min_ws,setting.max_ws)
+    return str
 end
 
-bard_status = texts.new(display_box(),setting.text,setting)
+bard_status = texts.new(display_box(),setting.box,setting)
 bard_status:show()
 
-function find_item(id)
+function find_item(...)
+    local ids = L{...}
     local items = windower.ffxi.get_items()
     for i,v in ipairs(items.inventory) do
-        if v and v.id == id then
-        return true
+        if ids:contains(v.id) then
+            return true
         end
     end
     for i,v in ipairs(items.wardrobe) do
-        if v and v.id == id then
-        return true
+        if ids:contains(v.id) then
+            return true
         end
     end
     return false
 end
 
 function find_extra_song_harp()
-    if find_item(21407) or find_item(18575) or find_item(18576) then
-        base_songs = 3
-    elseif find_item(18571) or find_item(18839) then
+    if find_item(18571,18839) then
         base_songs = 4
+    elseif find_item(21407,18575,18576,21400,21401) then
+        base_songs = 3
     else
         base_songs = 2
     end
@@ -158,12 +194,10 @@ windower.register_event('prerender',function ()
     if nexttime + del <= curtime then
         nexttime = curtime
         del = 0.1
-        for k,v in pairs(timers) do
-            update_timers(k)
-        end
+        for k,v in pairs(timers) do update_timers(k) end
         local play = windower.ffxi.get_player()
         if not play or play.main_job ~= 'BRD' or (play.status ~= 1 and play.status ~= 0) then return end
-        local JA_WS_lock
+        local JA_WS_lock,AM_start,goal_tp
         local moving = is_moving()
         local buffs = calculate_buffs(play.buffs)
         local spell_recasts = windower.ffxi.get_spell_recasts()
@@ -171,21 +205,14 @@ windower.register_event('prerender',function ()
         local recast = math.random(setting.recast,setting.recast+10)+math.random()
         if moving or casting or buffs.stun or buffs.sleep or buffs.charm or buffs.terror or buffs.petrification then return end
         if buffs.amnesia or buffs.impairment then JA_WS_lock = true end
-        if play.status == 1 and equip('main') == 'Carnwenhan' and not JA_WS_lock then
+        if not JA_WS_lock and play.status == 1 and equip('main') == 'Carnwenhan' then
             local targ = windower.ffxi.get_mob_by_target('t')
-            local Eye_Sight = eye_sight(windower.ffxi.get_mob_by_target('me'),targ)
-            if not AM_start and buffs['aftermath: lv.3'] then
-                AM_start = curtime
-            end
-            if buffs['aftermath: lv.3'] and AM_start and curtime - AM_start <= 140 then
-                goal_tp = 1000
-            else
-                goal_tp = 3000
-            end
-            if Eye_Sight and play.vitals.tp >= goal_tp and targ and targ.valid_target and targ.hpp < setting.max_ws_hp and targ.hpp > setting.min_ws_hp and targ.is_npc and math.sqrt(targ.distance) <= 4 and ((goal_tp == 3000 and not buffs['aftermath: lv.3']) or goal_tp == 1000) then
-                if goal_tp == 3000 then
-                    AM_start = curtime
-                end
+            if not AM_start and buffs['aftermath: lv.3'] then AM_start = curtime end
+            if buffs['aftermath: lv.3'] and AM_start and curtime - AM_start <= 140 then goal_tp = 1000 else goal_tp = 3000 end
+            if (eye_sight(windower.ffxi.get_mob_by_target('me'),targ) and play.vitals.tp >= goal_tp and 
+            targ and targ.valid_target and targ.is_npc and targ.hpp < setting.max_ws and targ.hpp > setting.min_ws and  
+            math.sqrt(targ.distance) <= 4) and ((goal_tp == 3000 and not buffs['aftermath: lv.3']) or goal_tp == 1000) then
+                if goal_tp == 3000 then AM_start = curtime end
                 windower.send_command('input /ws "Mordant Rime" <t>')
                 del = 4.2
                 return
@@ -196,15 +223,49 @@ windower.register_event('prerender',function ()
             local song = check_song(setting.songs,'AoE',buffs,spell_recasts,recast) 
             if song then cast_song(song,'<me>',buffs,ability_recasts,JA_WS_lock) return end
         end
-        if not setting.pianissimo then return end
-        for targ,songs in pairs(setting.song) do
-            if valid_target(targ,20) then
-                local song = check_song(songs,targ:ucfirst(),buffs,spell_recasts,recast) 
-                if song then cast_song(song,targ:ucfirst(),buffs,ability_recasts,JA_WS_lock) return end
+        if setting.pianissimo then
+            for targ,songs in pairs(setting.song) do
+                if valid_target(targ,20) then
+                    local targ = targ:ucfirst()
+                    local song = check_song(songs,targ,buffs,spell_recasts,recast) 
+                    if song then cast_song(song,targ,buffs,ability_recasts,JA_WS_lock) return end
+                end
+            end
+        end
+        if table.length(setting.buffs.haste)+table.length(setting.buffs.refresh) == 0 then return end
+        local rebuff = math.random(8,24)+math.random()
+        for key,targets in pairs(setting.buffs) do
+            local spell = get_spell(key)
+            for targ,v in pairs(targets) do
+                if v and spell and spell_recasts[spell.id] <= 0 and valid_target(targ,20) and play.vitals.mp >= 40 and
+                (not timers.buffs or not timers.buffs[spell.enl] or not timers.buffs[spell.enl][targ] or 
+                os.time() - timers.buffs[spell.enl][targ]+rebuff > 0) then
+                    use_MA(spell.enl,targ)
+                    return
+                end
             end
         end
     end
 end)
+
+function get_spell(spell)
+    for k,v in pairs(buff_spells) do
+        if buff_spells[k] and v.enl:lower() == spell:lower() then
+            return v
+        end
+    end
+    return nil
+end
+
+function calculate_buffs(curbuffs)
+    local buffs = {}
+    for i,v in pairs(curbuffs) do
+        if res.buffs[v] and res.buffs[v].english then
+            buffs[res.buffs[v].english:lower()] = (buffs[res.buffs[v].english:lower()] or 0) + 1
+        end
+    end
+    return buffs
+end
 
 function use_JA(str)
     windower.send_command(str)
@@ -232,6 +293,17 @@ function cast_song(str,ta,buffs,recasts,JA_WS_lock)
     end
 end
 
+function aug_maxsongs(targ,buffs)
+    local maxsongs = base_songs
+    if buffs['clarion call'] then
+        maxsongs = maxsongs + 1 
+    end
+    if maxsongs < table.length(timers[targ]) then
+        maxsongs = table.length(timers[targ])
+    end
+    return maxsongs
+end
+
 function aug_songs(songs,targ,maxsongs)
     local song_list = {}
     local clarion = setting.clarion[targ:lower()]
@@ -239,7 +311,7 @@ function aug_songs(songs,targ,maxsongs)
         song_list[k] = v
     end
     if clarion and maxsongs > base_songs then
-        song_list[clarion] = (song_list[clarion] or 0)+1 
+        song_list[clarion] = (song_list[clarion] or 0) + 1 
     end
     return song_list
 end
@@ -247,10 +319,10 @@ end
 function check_song(songs,targ,buffs,spell_recasts,recast)
     local maxsongs = aug_maxsongs(targ,buffs)
     local song_list = aug_songs(songs,targ,maxsongs)
-    if base_songs == 4 and timers[targ] and table.length(timers[targ]) == maxsongs-2 and spell_recasts[get_song_id(setting.dummy2)] <= 0 then
-        return setting.dummy2
-    elseif base_songs >= 3 and timers[targ] and table.length(timers[targ]) == maxsongs-1 and spell_recasts[get_song_id(setting.dummy1)] <= 0 then
-        return setting.dummy1
+    for k,song in ipairs(setting.dummy) do
+        if base_songs >= k+2 and timers[targ] and table.length(timers[targ]) == maxsongs-k and spell_recasts[get_song_id(song)] <= 0 then
+            return song
+        end
     end
     for buff,num in pairs(song_list) do
         for x = 1,num do
@@ -284,15 +356,6 @@ function is_moving()
     return false
 end
 
-function valid_target(targ,dst)
-    for ind,member in pairs(windower.ffxi.get_party()) do
-        if type(member) == 'table' and member.mob and member.mob.name:lower() == targ:lower() and math.sqrt(member.mob.distance) < dst and not member.mob.charmed and member.mob.hpp > 0 and member.mob.in_party then
-           return true
-        end
-    end
-    return false
-end
-
 function eye_sight(player,target)
     if not target then return false end
     local xdif = target.x - player.x -- Negative if target is west
@@ -304,118 +367,28 @@ function eye_sight(player,target)
     end
 end
 
-function addon_message(str)
-    windower.add_to_chat(207, _addon.name..': '..str)
-end
-
-windower.register_event('addon command', function(...)
-    local commands = {...}
-    if commands[1] then
-        commands[1] = commands[1]:lower()
-        if commands[1] == 'on' then
-            find_extra_song_harp()
-            setting.actions = true
-            addon_message('actions On')
-        elseif commands[1] == 'off' then
-            setting.actions = false
-            addon_message('actions Off')
-        elseif commands[1] == 'song' and commands[4] then
-            local player = commands[2]:lower()
-            local buff = commands[3]:lower()
-            if not buff_songs[buff] then return end
-            if not setting.song[player] then setting.song[player] = {} end
-            if commands[4] ~= '0' and tonumber(commands[4]) then
-                setting.song[player][buff] = tonumber(commands[4])
-               addon_message('Will now Pianissimo %s x%d for %s.':format(buff,commands[4],player))
-            elseif commands[4] == '0' or commands[4]:lower() == 'off' then
-                setting.song[player][buff] = nil
-                addon_message('Will no longer Pianissimo %s for %s.':format(buff,player))
-            end
-        elseif commands[1] == 'aoe' and commands[3] then
-            local player = commands[2]:lower()
-            if commands[3] == '+' and player then
-                setting.aoe[player] = true
-                addon_message('Will now ensure %s is in AoE casting range.':format(player))
-            elseif commands[3] == '-' and player then
-                setting.aoe[player] = false
-                addon_message('%s will now be ignored for AoE.':format(player))
-            end
-        elseif commands[1] == 'clarion' and commands[2] then
-            if commands[3] and setting.song[commands[2]:lower()] and buff_songs[commands[3]:lower()] then
-                setting.clarion[commands[2]:lower()] = commands[3]:lower()
-                addon_message('Clarion song for %s set to %s':format(commands[2],commands[3]))
-            elseif buff_songs[commands[2]:lower()] then
-                setting.clarion.aoe = table.concat(commands, ' ',2):lower()
-                addon_message('Clarion AoE song set to %s':format(commands[2]):lower())
-            end
-        elseif commands[1] == 'save' then
-            setting:save()
-            addon_message('settings saved.')
-        elseif commands[1] == 'active' then
-            local str = 'Active Settings\n'
-            for k,v in pairs(setting.songs) do
-                str = str..'%s:[x%d] ':format(k:ucfirst(),v)
-            end
-            str = str..'Clarion:[%s] Marcaro:[%s]\nDummy1:[%s] Dummy2:[%s]':format(setting.clarion.aoe,setting.marcato,setting.dummy1,setting.dummy2)
-            str = str..'\nPianissimo:[%s] ':format(setting.pianissimo and 'On' or 'Off')
-            for k,v in pairs(setting.song) do
-                str=str..'%s':format(k:ucfirst())
-                for i,t in pairs(v) do
-                    str = str..':[%s x%d]':format(i,t)
-                end
-                if setting.clarion[k] then
-                    str = str..' Clarion:[%s]':format(setting.clarion[k])
-                end
-                str= str..'\n'
-            end
-            for k,v in pairs(default) do
-                if type(v) == 'number' then
-                    str = str..'%s:[%d] ':format(k:ucfirst(),setting[k])
-                end
-            end
-            addon_message(str)
-        elseif commands[1] == 'eval' then
-             assert(loadstring(table.concat(commands, ' ',2)))()
-        elseif buff_songs[commands[1]] and commands[2] then
-            if commands[2] ~= '0' and tonumber(commands[2]) then
-                setting.songs[commands[1]] = tonumber(commands[2])
-                addon_message('%s x%d':format(commands[1],commands[2]))
-            elseif commands[2] == '0' or commands[2]:lower() == 'off' then
-                setting.songs[commands[1]] = nil
-                addon_message('%s Off':format(commands[1]))
-            end
-        elseif type(setting[commands[1]]) == 'number' and commands[2] and tonumber(commands[2]) then
-            setting[commands[1]] = tonumber(commands[2])
-            addon_message('%s is now set to %d':format(commands[1],setting[commands[1]]))
-        elseif type(setting[commands[1]]) == 'string' then
-            setting[commands[1]] = table.concat(commands, ' ',2):lower()
-             addon_message('%s is now set to %s':format(commands[1],setting[commands[1]]))
-        elseif type(setting[commands[1]]) == 'boolean' then
-            if not commands[2] and setting[commands[1]] == true or commands[2] and commands[2]:lower() == 'off' then
-                setting[commands[1]] = false
-            elseif not commands[2] or commands[2] and commands[2]:lower() == 'on' then
-                setting[commands[1]] = true 
-            end
-            addon_message('%s %s':format(commands[1],setting[commands[1]] and 'On' or 'Off'))
+function valid_target(targ,dst)
+    for ind,member in pairs(windower.ffxi.get_party()) do
+        if type(member) == 'table' and member.mob and 
+        member.mob.in_party and member.mob.hpp > 0 and 
+        member.mob.name:lower() == targ:lower() and 
+        math.sqrt(member.mob.distance) < dst and 
+        not member.mob.charmed then
+           return true
         end
     end
-    bard_status:text(display_box())
-end)
-
-function calculate_buffs(curbuffs)
-    local buffs = {}
-    for i,v in pairs(curbuffs) do
-        if res.buffs[v] and res.buffs[v].english then
-            buffs[res.buffs[v].english:lower()] = (buffs[res.buffs[v].english:lower()] or 0) + 1
-        end
-    end
-    return buffs
+    return false
 end
+
 
 function aoe_range()
-    for k,v in ipairs(setting.aoe) do
-        if not valid_target(v,10) then
-            return false
+    for ind,member in pairs(windower.ffxi.get_party()) do
+        if type(member) == 'table' and member.mob and 
+        member.mob.in_party and member.mob.hpp > 0 and 
+        setting.aoe[member.mob.name:lower()] and 
+        math.sqrt(member.mob.distance) >= 10 and
+        not member.mob.charmed then
+           return false
         end
     end
     return true
@@ -446,6 +419,118 @@ function get_song(song)
     end
     return nil
 end
+
+function addon_message(str)
+    windower.add_to_chat(207, _addon.name..': '..str)
+end
+
+windower.register_event('addon command', function(...)
+    local commands = {...}
+    for x=1,#commands do commands[x] = windower.convert_auto_trans(commands[x]):lower() end
+    if not commands[1] or S{'on','off'}:contains(commands[1]) then
+        find_extra_song_harp()
+        if not commands[1] then
+            setting.actions = not setting.actions
+        elseif commands[1] == 'on' then
+            setting.actions = true
+        elseif commands[1] == 'off' then
+            setting.actions = false
+        end
+        addon_message('Actions %s':format(setting.actions and 'On' or 'Off'))
+    else
+        if commands[1] == 'save' then
+            setting:save()
+            addon_message('Settings Saved.')
+        elseif commands[1] == 'aoe' and commands[3] then
+            if commands[3] == '+' then
+                setting.aoe[commands[2]] = true
+                addon_message('Will now ensure %s is in AoE range.':format(commands[2]))
+            elseif commands[3] == '-' then
+                setting.aoe[commands[2]] = false
+                addon_message('%s will now be ignored for AoE.':format(commands[2]))
+            end
+        elseif commands[1] == 'clarion' and commands[2] and buff_songs[commands[2]] then
+            if commands[3] and setting.song[commands[3]]then
+                setting.clarion[commands[3]] = commands[2]
+                addon_message('Clarion song for %s set to %s':format(commands[3],commands[2]))
+            else
+                setting.clarion.aoe = commands[2]
+                addon_message('Clarion AoE song set to %s':format(commands[2]))
+            end
+        elseif commands[1] == 'ws' and commands[3] and tonumber(commands[3]) then
+            if commands[2] == '<' then
+                setting.max_ws = tonumber(commands[3])
+            elseif commands[2] == '>' then
+                setting.min_ws = tonumber(commands[3])
+            end
+       elseif commands[1]:startswith('dummy') then
+            local ind = tonumber(commands[1]:sub(6)) or 1
+            local song = get_song(table.concat(commands, ' ',2))
+            if song and ind <= 2 then
+                setting.dummy[ind] = song
+                addon_message('Dummy song #%d set to %s':format(ind,song))
+            else
+                addon_message('Invalid song name.')
+            end
+       elseif buff_songs[commands[1]] and commands[2] then
+            local n = tonumber(commands[2])
+            if n and n ~= 0 and n <= #buff_songs[commands[1]] then
+                if commands[3] then
+                    if not setting.song[commands[3]] then setting.song[commands[3]] = {} end
+                    setting.song[commands[3]][commands[1]] = n
+                    addon_message('Will now Pianissimo %s x%d for %s.':format(commands[1],commands[2],commands[3]))
+                else
+                    setting.songs[commands[1]] = tonumber(commands[2])
+                    addon_message('%s x%d':format(commands[1],commands[2]))
+                end
+            elseif commands[2] == '0' or commands[2] == 'off' then
+                if commands[3] then
+                    setting.song[commands[3]][commands[1]] = nil
+                    addon_message('Will no longer Pianissimo %s for %s.':format(commands[1],commands[3]))
+                else               
+                    setting.songs[commands[1]] = nil
+                    addon_message('%s Off':format(commands[1]))
+                end
+            elseif n then
+                addon_message('Error: %d exceeds the maximum value for %s.':format(n,commands[1]))
+            end
+        elseif type(setting[commands[1]]) == 'string' and commands[2] then
+            local song = get_song(table.concat(commands, ' ',2))
+            if song then
+                setting[commands[1]] = song
+                addon_message('%s is now set to %s':format(commands[1],song))
+            else
+                addon_message('Invalid song name.')
+            end
+       elseif type(setting[commands[1]]) == 'number' and commands[2] and tonumber(commands[2]) then
+            setting[commands[1]] = tonumber(commands[2])
+            addon_message('%s is now set to %d':format(commands[1],setting[commands[1]]))
+        elseif type(setting[commands[1]]) == 'boolean' then
+            if (not commands[2] and setting[commands[1]] == true) or (commands[2] and commands[2] == 'off') then
+                setting[commands[1]] = false
+                if commands[1] == 'timers' then reset_timers(true) end
+            elseif (not commands[2]) or (commands[2] and commands[2] == 'on') then
+                setting[commands[1]] = true
+            end
+            addon_message('%s %s':format(commands[1],setting[commands[1]] and 'On' or 'Off'))
+        elseif get_spell(commands[1]) and commands[2] then
+            if not commands[3] then
+                if setting.buffs[commands[1]][commands[2]] then
+                    setting.buffs[commands[1]][commands[2]] = nil
+                else
+                    setting.buffs[commands[1]][commands[2]] = true
+                end
+            elseif commands[3] == 'on' then
+                setting.buffs[commands[1]][commands[2]] = true
+            elseif commands[3] == 'off' then
+                setting.buffs[commands[1]][commands[2]] = nil
+            end
+        elseif commands[1] == 'eval' then
+            assert(loadstring(table.concat(commands, ' ',2)))()
+        end
+    end
+    bard_status:text(display_box())
+end)
 
 function equip(slot)
     local item = windower.ffxi.get_items().equipment
@@ -502,21 +587,22 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
             -- Finish Casting
             casting = false
             del = setting.delay
+            local spell = buff_spells[packet['Param']]
+            if spell then timers.buffs[spell.enl][targ:lower()] = os.time()+spell.dur return end
             if not song_id[packet['Param']] then return end
             local buffs = calculate_buffs(play.buffs)
             local spell_name = song_id[packet['Param']]
             
-            
-            
-            
-            
-            if packet['Target Count'] > 1 or targ == play.name and table.length(timers['AoE']) < base_songs then
+            --
+            if packet['Target Count'] > 1 then--or targ == play.name and table.length(timers['AoE']) < base_songs then
                 adjust_timers(spell_name,'AoE',buffs)
             end
             for x = 1,packet['Target Count'] do
                 local targ_name = windower.ffxi.get_mob_by_id(packet['Target '..x..' ID']).name
                 adjust_timers(spell_name,targ_name,buffs)
             end
+            --
+            
         elseif packet['Category'] == 7 and actor == play.name then
             casting = true
         elseif packet['Category'] == 9 and actor == play.name then
@@ -557,6 +643,7 @@ function buff_lost(targ,buff)
 end
 
 function update_timers(targ)
+    if targ == 'buffs' then return end
     if not timers[targ] then timers[targ] = {} end
     local current_time = os.time()
     local temp_timer_list = {}
@@ -570,17 +657,6 @@ function update_timers(targ)
     end
 end
 
-function aug_maxsongs(targ,buffs)
-    local maxsongs = base_songs
-    if buffs['clarion call'] then
-        maxsongs = maxsongs + 1 
-    end
-    if maxsongs < table.length(timers[targ]) then
-        maxsongs = table.length(timers[targ])
-    end
-    return maxsongs
-end
-
 function delete_timer(song,targ)
     timers[targ][song] = nil
     windower.send_command('timers delete "%s [%s]"':format(song,targ))
@@ -588,7 +664,7 @@ end
 
 function create_timer(song,targ,dur,current_time,buffs)
     timers[targ][song] = {ts=current_time+dur,nt=buffs.troubadour,sv=buffs['soul voice']}
-    if timers.AoE[song] and targ ~= 'AoE' or not setting.display then return end
+    if timers.AoE[song] and targ ~= 'AoE' or not setting.timers then return end
     windower.send_command('timers create "%s [%s]" %s down':format(song,targ,dur))
 end
               
@@ -621,18 +697,18 @@ function adjust_timers(spell_name,targ,buffs)
     end
 end
 
-function reset_timers()
+function reset_timers(bool)
     for k,targ in pairs(timers) do
         for i,v in pairs(targ) do
             windower.send_command('timers delete "%s [%s]"':format(i,k))
         end
     end
-    timers = {}
-    timers['AoE'] = {}
+    if bool then return end
+    timers = {AoE={},buffs={Haste={},Refresh={}}}
     casting = false
 end
 
-function change()
+function event_change()
     setting.actions = false
     casting = false
     reset_timers()
@@ -642,10 +718,10 @@ end
 function status_change(new,old)
     casting = false
     if new == 2 or new == 3 then
-        change()
+        event_change()
     end
 end
 
 windower.register_event('unload', reset_timers)
 windower.register_event('status change', status_change)
-windower.register_event('zone change','job change','logout', change)
+windower.register_event('zone change','job change','logout', event_change)
