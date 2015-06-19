@@ -14,22 +14,22 @@ Accepts auto-translated terms.
 
 	//sing [on|off]                 -  Turn actions on/off.
 	//sing actions [on|off]         -  Same as above.
-    //sing active [on|off]		    -  Display active settings in text box
-    //sing timers [on|off]          -  Dislay custom song timers.
-    //sing haste [name] [on|off]    -  Add or remove names of players for Haste cycle.
-    //sing refresh [name] [on|off]  -  Add or remove names of players for Refresh cycle.
-    //sing pianissimo [on|off]	    -  Toggles pianissimo songs.
+	//sing active [on|off]		    -  Display active settings in text box
+	//sing timers [on|off]          -  Dislay custom song timers.
+	//sing haste [name] [on|off]    -  Add or remove names of players for Haste cycle.
+	//sing refresh [name] [on|off]  -  Add or remove names of players for Refresh cycle.
+	//sing pianissimo [on|off]	    -  Toggles pianissimo songs.
 	//sing delay [n]		        -  [n] second delay between song casting.
 	//sing recast [n]               -  Recast songs [n] seconds before they wear off.
-    //sing [buff] [n]               -  Set aoe buff song to x[n] or off.*
-    //sing [buff] [n] [name] 	    -  Set pianissimo song type to x[n] or off for [name].*
-    //sing clarion [buff] 	        -  Set extra clarion song.*
-    //sing clarion [buff] [name]    -  Set pianissimo clarion song for [name].*
+	//sing [buff] [n]               -  Set aoe buff song to x[n] or off.*
+	//sing [buff] [n] [name] 	    -  Set pianissimo song type to x[n] or off for [name].*
+	//sing clarion [buff] 	        -  Set extra clarion song.*
+	//sing clarion [buff] [name]    -  Set pianissimo clarion song for [name].*
 	//sing marcato [song]           -  Set song to use following marcato.**
 	//sing dummy [song]	            -  Set dummy song.**
 	//sing dummy2 [song]	        -  Second dummy song, both are ignored if you do not own the proper equipment.**
 	//sing aoe [name] [+|-]         -  Add players to ensure they are in aoe range.
-    //sing save                     -  Saves settings on a per character basis.
+	//sing save                     -  Saves settings on a per character basis.
 
 To configure songs use:
 	
