@@ -9,13 +9,13 @@ instruments, (if found in inventory/wardrobe.) and applies it to your song limit
 when typing commands don't use "[ ]" or "|". [on/off] is optional and when not provided will toggle states.
 Accepts auto-translated terms.
 
-	//sing [on/off]                 -  Turn actions on/off.
-	//sing actions [on/off]         -  Same as above.
-    //sing active [on/off]		    -  Display active settings in text box
-    //sing timers [on/off]          -  Dislay custom song timers.
-    //sing haste [name] [on/off]    -  Add or remove names of players for Haste cycle.
-    //sing refresh [name] [on/off]  -  Add or remove names of players for Refresh cycle.
-    //sing pianissimo [on/off]	    -  Toggles pianissimo songs.
+	//sing [on|off]                 -  Turn actions on/off.
+	//sing actions [on|off]         -  Same as above.
+    //sing active [on|off]		    -  Display active settings in text box
+    //sing timers [on|off]          -  Dislay custom song timers.
+    //sing haste [name] [on|off]    -  Add or remove names of players for Haste cycle.
+    //sing refresh [name] [on|off]  -  Add or remove names of players for Refresh cycle.
+    //sing pianissimo [on|off]	    -  Toggles pianissimo songs.
 	//sing delay [n]		        -  [n] second delay between song casting.
 	//sing recast [n]               -  Recast songs [n] seconds before they wear off.
     //sing [buff] [n]               -  Set aoe buff song to x[n] or off.*
@@ -30,12 +30,12 @@ Accepts auto-translated terms.
 
 To configure songs use:
 	
-	"//sing [buff] [n/off]" 
+	"//sing [buff] [n|off]" 
 	e.g. //sing march 2 - sets number of marches to 2.*
 
 To turn a song off:
 	
-	"//sing [buff] 0" or "//sing [buff_name] off"
+	"//sing [buff] 0" or "//sing [buff] off"
 	e.g. //sing madrigal 0 - sets number of madrigals to 0 madrigals will not be used.*
 	
 	
