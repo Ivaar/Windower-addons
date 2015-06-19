@@ -6,7 +6,7 @@ at the endcast, supports two dummy songs, checks active song buffs casted by pla
 instruments, (if found in inventory/wardrobe.) and applies it to your song limit.
 
 ##### Commands: 
-when typing commands don't use "[ ]" or "|". [on/off] is optional and when not provided will toggle states.
+when typing commands don't use "[ ]" or "|". [on|off] is optional and when not provided will toggle states.
 Accepts auto-translated terms.
 
 	//sing [on|off]                 -  Turn actions on/off.
