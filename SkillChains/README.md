@@ -1,4 +1,5 @@
 # SkillChains
+### Active Battle Skillchain Display.
 
 Displays a text object containing skillchain elements resonating on current target, timer for skillchain window,
 along with a list of weapon skills that can skillchain based on the weapon you have currently equipped. 
