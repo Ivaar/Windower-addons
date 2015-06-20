@@ -1,0 +1,159 @@
+local get = {}
+
+function get.item(...)
+    local item_ids = L{...}
+    local items = windower.ffxi.get_items()
+    for i,v in ipairs(items.inventory) do
+        if item_ids:contains(v.id) then
+            return true
+        end
+    end
+    for i,v in ipairs(items.wardrobe) do
+        if item_ids:contains(v.id) then
+            return true
+        end
+    end
+    return false
+end
+
+function get.extra_song()
+    if get.item(18571,18839) then
+        return 4
+    elseif get.item(21407,18575,18576,21400,21401) then
+        return 3
+    end
+    return  2
+end
+base_songs = get.extra_song()
+
+function get.buffs(curbuffs)
+    local buffs = {}
+    for i,v in pairs(curbuffs) do
+        if res.buffs[v] and res.buffs[v].english then
+            buffs[res.buffs[v].english:lower()] = (buffs[res.buffs[v].english:lower()] or 0) + 1
+        end
+    end
+    return buffs
+end
+
+function get.equip(slot)
+    local item = windower.ffxi.get_items().equipment
+    return ids.equipment[windower.ffxi.get_items(item[slot..'_bag'],item[slot]).id] or ''
+end
+
+function get.spell(spell)
+    for k,v in pairs(ids.spells) do
+        if v and v.enl and string.lower(v.enl) == string.lower(spell) then
+            return v
+        end
+    end
+    return nil
+end
+
+function get.song(song)
+    for k,v in pairs(ids.songs) do
+        if v:lower() == song:lower() then
+            return v
+        end
+    end
+    return nil
+end
+
+function get.song_id(song)
+    for k,v in pairs(ids.songs) do
+        if v:lower() == song:lower() then
+            return k
+        end
+    end
+    return nil
+end
+
+function get.song_buff(song,bool)
+    for id,buff in ipairs(ids.buffs) do
+        if string.find(song,buff) then
+            return bool and id,buff or buff
+        end
+    end
+    return nil
+end
+
+function get.maxsongs(targ,buffs)
+    local maxsongs = get.extra_song()
+    if buffs['clarion call'] then
+        maxsongs = maxsongs + 1 
+    end
+    if maxsongs < table.length(timers[targ]) then
+        maxsongs = table.length(timers[targ])
+    end
+    return maxsongs
+end
+
+function get.song_list(songs,targ,maxsongs)
+    local list = {}
+    local clarion = setting.clarion[targ:lower()]
+    for k,v in pairs(songs) do
+        list[k] = v
+    end
+    if clarion and maxsongs > base_songs then
+        list[clarion] = (list[clarion] or 0) + 1 
+    end
+    return list
+end
+
+
+function get.coords()
+    local play = windower.ffxi.get_mob_by_target('me')
+    if play then
+        return {play.x,play.z,play.y}
+    else
+        return {0,0,0}
+    end 
+end
+
+function get.moving()
+    local coords = get.coords()
+    local clock = os.clock()
+    lastcoords = lastcoords and lastcoords or coords
+    for x=1,3 do if lastcoords[x] ~= coords[x] then lastcoords=coords ts=clock return true end end
+    if ts and ts+1>clock then return true end
+    return false
+end
+
+function get.eye_sight(player,target)
+    if not target then return false end
+    local xdif = target.x - player.x -- Negative if target is west
+    local ydif = target.y - player.y -- Negative if target is south
+    if math.abs(-math.atan2(ydif,xdif)-player.facing) < 0.76 then
+        return true
+    else
+        return false
+    end
+end
+
+function get.valid_target(targ,dst)
+    for ind,member in pairs(windower.ffxi.get_party()) do
+        if type(member) == 'table' and member.mob and 
+        member.mob.in_party and member.mob.hpp > 0 and 
+        member.mob.name:lower() == targ:lower() and 
+        math.sqrt(member.mob.distance) < dst and 
+        not member.mob.charmed then
+           return true
+        end
+    end
+    return false
+end
+
+function get.aoe_range()
+    for ind,member in pairs(windower.ffxi.get_party()) do
+        if type(member) == 'table' and member.mob and 
+        member.mob.in_party and member.mob.hpp > 0 and 
+        setting.aoe[member.mob.name:lower()] and 
+        math.sqrt(member.mob.distance) >= 10 and
+        not member.mob.charmed then
+           return false
+        end
+    end
+    return true
+end
+
+return get
