@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '1.15.06.23'
+_addon.version = '1.15.06.24'
 
 texts = require('texts')
 packets = require('packets')
@@ -170,27 +170,27 @@ function apply_props(packet,ability)
     local mob_id = packet['Target 1 ID']
     local mob = windower.ffxi.get_mob_by_id(mob_id)
     if not mob or not mob.is_npc or mob.hpp == 0 then return end
-    local abil = res[ability][packet['Param']]
+    local abil = res[ability][packet.Param]
     if abil and ability == 'spells' then
         if abil.skill == 43 then
-            abil = blue_mage[packet['Param']]
+            abil = blue_mage[packet.Param]
         elseif abil.skill == 36 then
             abil.skillchain_a = elements[abil.element].sc
         else
             return
         end
     elseif abil and ability == 'job_abilities' then
-        abil = blood_pacts[packet['Param']]
+        abil = blood_pacts[packet.Param]
     end
     if not abil then return end
     local skillchain = packet['Target 1 Action 1 Has Added Effect'] and skillchains[packet['Target 1 Action 1 Added Effect Message']]
-    local now = os.clock()
+    local now = os.time()
     if skillchain then
         local reson = resonating[mob_id]
         local step = reson.step and reson.step + 1
         local closed
         if lvl3:contains(skillchain) and reson and not reson.closed and reson.active[1] == skillchain and
-           (reson.chain or reson.ws.skillchain_a == ws.skillchain_a) then
+        (reson.chain or reson.ws.skillchain_a == abil.skillchain_a) then
             closed = true
         end
         resonating[mob_id] = {active={skillchain},timer=now,ws=abil,chain=true,closed=closed,step=step}
@@ -198,15 +198,15 @@ function apply_props(packet,ability)
         resonating[mob_id] = {active={abil.skillchain_a,abil.skillchain_b,abil.skillchain_c},timer=now,ws=abil,chain=false,step=1}
     elseif L{317}:contains(packet['Target 1 Action 1 Message']) then
         resonating[mob_id] = {active={abil.skillchain_a},timer=now,ws=abil,chain=false,step=1}
-    elseif ability == 'spells' and abil.skill == 36 and chain_ability[packet['Actor']] and now-chain_ability[packet['Actor']] <= 60 then
+    elseif ability == 'spells' and abil.skill == 36 and chain_ability[packet.Actor] and now-chain_ability[packet.Actor] <= 60 then
         resonating[mob_id] = {active={active},timer=now,ws=abil,chain=false,step=1}
     elseif ability == 'spells' and abil.skill == 43 and packet['Target 1 Action 1 Message'] == 2 and 
-    (azure_lore[packet['Actor']] or chain_ability[packet['Actor']]) and 
-    (now-azure_lore[packet['Actor']] <= 40 or now-chain_ability[packet['Actor']] <= 30) then
+    (azure_lore[packet.Actor] or chain_ability[packet.Actor]) and 
+    (now-azure_lore[packet.Actor] <= 40 or now-chain_ability[packet.Actor] <= 30) then
         resonating[mob_id] = {active={abil.skillchain_a,abil.skillchain_b},timer=now,ws=abil,chain=false,step=1}
     end
-    if chain_ability[packet['Actor']] and abil.skill and (abil.skill == 43 or abil.skill == 36) then
-        chain_ability[packet['Actor']] = nil
+    if chain_ability[packet.Actor] and abil.skill and (abil.skill == 43 or abil.skill == 36) then
+        chain_ability[packet.Actor] = nil
     end
     if not resonating[mob_id] then return end
     for k,element in ipairs(resonating[mob_id].active) do
@@ -216,7 +216,7 @@ end
 
 function burst_results(reson)
     local stra,strb = '',''
-    for k,element in pairs(reson.active) do
+    for k,element in ipairs(reson.active) do
         stra = stra..' [%s]':format(element)
         if settings.ma and resonating.chain and not reson.mb_flag then
             strb = strb..'\n (Burst: %s)':format(prop_info[element].elements)
@@ -261,7 +261,7 @@ function chain_results(reson)
                             local term = spell.en
                             if spell.avatar then term = spell.avatar..': '..term end
                             if (not spells[term] or spells[term].lvl < lvl) then
-                                spells[term]={lvl=lvl,prop=v}
+                                spells[term] = {lvl=lvl,prop=v}
                             end
                         end
                     end
@@ -271,7 +271,7 @@ function chain_results(reson)
                         local ws = res.weapon_skills[t]
                         if ws and S{ws.skillchain_a,ws.skillchain_b,ws.skillchain_c}:contains(k) and
                         (not skills[ws.en] or skills[ws.en].lvl < lvl) then
-                            skills[ws.en]={lvl=lvl,prop=v}
+                            skills[ws.en] = {lvl=lvl,prop=v}
                         end
                     end
                 end
@@ -281,7 +281,7 @@ function chain_results(reson)
     return {[1]=skills,[2]=spells}
 end
 
-function display_results(targ,now)
+function display_results(targ)
     local str = ''
     local results = chain_results(resonating[targ])
     local chain,burst = burst_results(resonating[targ])
@@ -295,25 +295,24 @@ function display_results(targ,now)
         end
     end
     if str == '' and burst == '' then return '' end
-    str = ' Step: %d >> [%s] >>':format(resonating[targ].step,resonating[targ].ws.en)..chain..burst..str
-    if now-resonating[targ].timer < 3 then
-        str = ' wait %s \n':format(math.abs(math.floor(now-resonating[targ].timer-3)))..str
-    elseif now-resonating[targ].timer < 10 then
-        str = ' GO! %s \n':format(math.abs(math.floor(now-resonating[targ].timer-10)))..str
-    end
-    return str
+    return ' Step: %d >> [%s] >>':format(resonating[targ].step,resonating[targ].ws.en)..chain..burst..str
 end
 
 windower.register_event('prerender', function()
     local targ = windower.ffxi.get_mob_by_target('t')
-    local now = os.clock()
+    local now = os.time()
     for k,v in pairs(resonating) do
         if now-v.timer > 10 then
             resonating[k] = nil
         end
     end
     if targ and targ.hpp > 0 and resonating[targ.id] and not resonating[targ.id].closed then
-        local disp_info = display_results(targ.id,now)
+        local disp_info = display_results(targ.id)
+        if now-resonating[targ.id].timer < 3 then
+            disp_info = ' wait %s \n':format(math.abs(math.floor(now-resonating[targ.id].timer-3)))..disp_info
+        elseif now-resonating[targ.id].timer < 10 then
+            disp_info = ' GO! %s \n':format(math.abs(math.floor(now-resonating[targ.id].timer-10)))..disp_info
+        end
         skill_props:text(disp_info)
         skill_props:show()
     elseif not visible then
@@ -324,26 +323,28 @@ end)
 windower.register_event('incoming chunk', function(id,original,modified,injected,blocked)
     if id == 0x028 then
         local packet = packets.parse('incoming', original)
+        local play = windower.ffxi.get_player()
         -- Finish Using Weapon Skill
+        if not play then return end
         if packet['Category'] == 3 then
-            apply_props(packet,'weapon_skills')
+            apply_props(packet,'weapon_skills',play)
         -- Finish Casting Magic
         elseif packet['Category'] == 4 then
             if packet['Target 1 Action 1 Message'] == 252 then
                 resonating[packet['Target 1 ID']].mb_flag = true
             else
-                apply_props(packet,'spells')
+                apply_props(packet,'spells',play)
             end
         -- Finish Job Ability Usage   
         elseif packet['Category'] == 6 then
-            if packet['Param'] == 94 or packet['Param'] == 317 then
-                chain_ability[packet['Actor']] = os.clock()
-            elseif packet['Param'] == 93 then
-                azure_lore[packet['Actor']] = os.clock()
+            if packet.Param == 94 or packet.Param == 317 then
+                chain_ability[packet.Actor] = os.time()
+            elseif packet.Param == 93 then
+                azure_lore[packet.Actor] = os.time()
             end
         -- Finish Pet Move
         elseif packet['Category'] == 13 then
-            apply_props(packet,'job_abilities')
+            apply_props(packet,'job_abilities',play)
         end
     end
 end)
