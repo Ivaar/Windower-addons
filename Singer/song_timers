@@ -32,7 +32,7 @@ function song_timers.duration(name,buffs)
 end
 
 function song_timers.buff_lost(targ,buff)
-    local buff = buff_songs[buff:lower()]
+    local buff = get.songs[buff:lower()]
     if not buff or not timers[targ] then return end
     local minimum,song
     for k,song_name in pairs(buff) do
@@ -43,7 +43,7 @@ function song_timers.buff_lost(targ,buff)
         end
     end
     if not song then return end
-    if not setting.song[targ] then song_timers.delete(song,'AoE') end
+    if not settings.song[targ] then song_timers.delete(song,'AoE') end
     song_timers.delete(song,targ)
 end
 
@@ -69,7 +69,7 @@ end
 
 function song_timers.create(song,targ,dur,current_time,buffs)
     timers[targ][song] = {ts=current_time+dur,nt=buffs.troubadour,sv=buffs['soul voice']}
-    if timers.AoE[song] and targ ~= 'AoE' or not setting.timers then return end
+    if timers.AoE[song] and targ ~= 'AoE' or not settings.timers then return end
     windower.send_command('timers create "%s [%s]" %s down':format(song,targ,dur))
 end
               
