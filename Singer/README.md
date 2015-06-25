@@ -1,6 +1,6 @@
 # Sing
 ### Automates casting of bard buff songs.
-
+#### If you are updating from a version prior to 1.15.06.24 make sure you delete your existing settings.xml file located within the addons data folder.
 Configure songs with commands, calculates song duration based on active job abilities and gear equipped 
 at the endcast, supports two dummy songs, checks active song buffs casted by player (as recorded by the addon) and detects song+ 
 instruments, (if found in inventory/wardrobe.) and applies it to your song limit.
@@ -20,15 +20,16 @@ Accepts auto-translated terms.
 	//sing refresh [name] [on|off]  -  Add or remove names of players for Refresh cycle.
 	//sing pianissimo [on|off]      -  Toggles pianissimo songs.
 	//sing delay [n]                -  [n] second delay between song casting.
-	//sing recast [n]               -  Recast songs [n] seconds before they wear off.
-	//sing [buff] [n]               -  Set aoe buff song to x[n] or off.*
+	//sing recast song [min] [max]  -  Begin recasting songs between [min] and [max] seconds before they wear.
+	//sing recast buff [min] [max]  -  Same as the above for haste and refresh.
+    //sing [buff] [n]               -  Set aoe buff song to x[n] or off.*
 	//sing [buff] [n] [name]        -  Set pianissimo song type to x[n] or off for [name].*
 	//sing clarion [buff]           -  Set extra clarion song.*
 	//sing clarion [buff] [name]    -  Set pianissimo clarion song for [name].*
 	//sing marcato [song]           -  Set song to use following marcato.**
 	//sing dummy [song]             -  Set dummy song.**
 	//sing dummy2 [song]            -  Second dummy song, both are ignored if you do not own the proper equipment.**
-	//sing aoe [name] [+|-]         -  Add players to ensure they are in aoe range.
+	//sing ignore [name] [+|-]      -  Adding party members will ignore thier distance check when casting songs.
 	//sing save                     -  Saves settings on a per character basis.
 
 To configure songs use:
