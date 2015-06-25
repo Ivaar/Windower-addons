@@ -1,4 +1,26 @@
 local get = {}
+get.songs = {
+    paeon = {[1]='Army\'s Paeon VI',[2]='Army\'s Paeon V',[3]='Army\'s Paeon IV',[4]='Army\'s Paeon III',[5]='Army\'s Paeon II',[6]='Army\'s Paeon'},
+    ballad = {[1]='Mage\'s Ballad III',[2]='Mage\'s Ballad II',[3]='Mage\'s Ballad'},
+    minne = {[1]='Knight\'s Minne V',[2]='Knight\'s Minne IV',[3]='Knight\'s Minne III',[4]='Knight\'s Minne II',[5]='Knight\'s Minne'},
+    march = {[1]='Victory March',[2]='Advancing March'},
+    minuet = {[1]='Valor Minuet V',[2]='Valor Minuet IV',[3]='Valor Minuet III',[4]='Valor Minuet II',[5]='Valor Minuet'}, 
+    madrigal = {[1]='Blade Madrigal',[2]='Sword Madrigal'},
+    prelude = {[1]='Archer\'s Prelude',[2]='Hunter\'s Prelude'},
+    mambo = {[1]='Dragonfoe Mambo',[2]='Sheepfoe Mambo'},
+    aubade = {[1]='Fowl Aubade'},
+    pastoral = {[1]='Herb Pastoral'},
+    fantasia = {[1]='Shining Fantasia'},
+    operetta = {[1]='Puppet\'s Operetta',[2]='Scop\'s Operetta'},
+    capriccio = {[1]='Gold Capriccio'},
+    round = {[1]='Warding Round'},
+    gavotte = {[1]='Shining Fantasia'},
+    hymnus = {[1]='Goddess\'s Hymnus'},
+    mazurka = {[1]='Chocobo Mazurka'},
+    sirvente = {[1]='Foe Sirvente'},
+    dirge = {[1]='Adventurer\'s Dirge'},
+    scherzo = {[1]='Sentinel\'s Scherzo'},
+    }
 
 function get.item(...)
     local item_ids = L{...}
@@ -51,27 +73,9 @@ function get.spell(spell)
 end
 
 function get.song(song)
-    for k,v in pairs(ids.songs) do
-        if v:lower() == song:lower() then
-            return v
-        end
-    end
-    return nil
-end
-
-function get.song_id(song)
-    for k,v in pairs(ids.songs) do
-        if v:lower() == song:lower() then
-            return k
-        end
-    end
-    return nil
-end
-
-function get.song_buff(song,bool)
-    for id,buff in ipairs(ids.buffs) do
-        if string.find(song,buff) then
-            return bool and id,buff or buff
+    for k,v in pairs(ids.songs) do 
+        if k ~= n and string.lower(v) == string.lower(song) then
+            return {id=k,enl=v}
         end
     end
     return nil
@@ -90,7 +94,7 @@ end
 
 function get.song_list(songs,targ,maxsongs)
     local list = {}
-    local clarion = setting.clarion[targ:lower()]
+    local clarion = settings.clarion[targ:lower()]
     for k,v in pairs(songs) do
         list[k] = v
     end
@@ -99,7 +103,6 @@ function get.song_list(songs,targ,maxsongs)
     end
     return list
 end
-
 
 function get.coords()
     local play = windower.ffxi.get_mob_by_target('me')
@@ -131,6 +134,7 @@ function get.eye_sight(player,target)
 end
 
 function get.valid_target(targ,dst)
+    windower.ffxi.get_mob_by_name(targ)
     for ind,member in pairs(windower.ffxi.get_party()) do
         if type(member) == 'table' and member.mob and 
         member.mob.in_party and member.mob.hpp > 0 and 
@@ -145,11 +149,9 @@ end
 
 function get.aoe_range()
     for ind,member in pairs(windower.ffxi.get_party()) do
-        if type(member) == 'table' and member.mob and 
-        member.mob.in_party and member.mob.hpp > 0 and 
-        setting.aoe[member.mob.name:lower()] and 
-        math.sqrt(member.mob.distance) >= 10 and
-        not member.mob.charmed then
+        if type(member) == 'table' and member.mob and member.mob.in_party and member.mob.hpp > 0 and
+        (not settings.song[member.mob.name:lower()] or not settings.ignore[member.mob.name:lower()]) and
+        math.sqrt(member.mob.distance) >= 10 and not member.mob.charmed then
            return false
         end
     end
