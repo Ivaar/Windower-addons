@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '1.15.06.24'
+_addon.version = '1.15.07.02'
 
 texts = require('texts')
 packets = require('packets')
@@ -108,7 +108,7 @@ blood_pacts = L{
     [656] = {id=656,avatar='Diabolos',en='Camisado',skillchain_a='Compression'},
     }
     
-blue_mage = L{
+blue_magic = L{
     [519] = {id=519,en='Screwdriver',skillchain_a='Transfixion',skillchain_b='Scission'},
     [529] = {id=529,en='Bludgeon',skillchain_a='Liquefaction',skillchain_b=''},
     [527] = {id=527,en='Smite of Rage',skillchain_a='Detonation',skillchain_b=''},
@@ -162,52 +162,137 @@ blue_mage = L{
     [743] = {id=743,en='Bloodrake',skillchain_a='Darkness',skillchain_b='Gravitation'},
     } 
 
-chain_ability = {}  
-resonating = {}
-azure_lore = {}
+npc_move = L{
+    -- Automaton
+    [1940] = {id=1940,en='Chimera Ripper',skillchain_a='Detonation',skillchain_b='Induration'},
+    [1941] = {id=1941,en='String Clipper',skillchain_a='Scission',skillchain_b='Icon Scission'},
+    [1942] = {id=1942,en='Arcuballista',skillchain_a='Liquefaction',skillchain_b='Transfixion'},
+    [1943] = {id=1943,en='Slapstick',skillchain_a='Reverberation',skillchain_b='Impaction'},
+    [2065] = {id=2065,en='Cannibal Blade',skillchain_a='Compression',skillchain_b='Reverberation'},
+    [2066] = {id=2066,en='Daze',skillchain_a='Impaction',skillchain_b='Transfixion'},
+    [2067] = {id=2067,en='Knockout',skillchain_a='Scission',skillchain_b='Detonation'},
+    [2300] = {id=2300,en='Armor Piercer',skillchain_a='Gravitation'},
+    [2301] = {id=2301,en='Magic Mortar',skillchain_a='Fusion',skillchain_b='Liquefaction'},
+    [2743] = {id=2743,en='String Shredder',skillchain_a='Distortion',skillchain_b='Scission'},
+    [2744] = {id=2744,en='Armor Shatterer',skillchain_a='Fusion',skillchain_b='Impaction'},
+    -- Trusts
+    --[3195] = {id=3195,trust='Zeid',en="Abyssal Drain",skillchain_a='',skillchain_b='',skillchain_c=''},
+    --[3196] = {id=3196,trust='Zeid',en="Abyssal Strike",skillchain_a='',skillchain_b='',skillchain_c=''},
+    -- assumed magical [3203] = {id=3203,trust='MihliAliapoh',en='Scouring Bubbles',skillchain_a='',skillchain_b='',skillchain_c=''},
+    [3204] = {id=3204,trust='Tenzen',en='Amatsu: Tsukikage',skillchain_a='Fragmentation',skillchain_b='Detonation',skillchain_c=''},
+    [3215] = {id=3215,trust='NajaSalaheem',en="Peacebreaker",skillchain_a='Fragmentation',skillchain_b='',skillchain_c=''},
+    --[3224] = {id=3224,trust='',en="Hemorrhaze",skillchain_a='',skillchain_b='',skillchain_c=''},
+    [3231] = {id=3231,trust='LehkoHabhoka',en='Debonair Rush',skillchain_a='Detonation',skillchain_b='',skillchain_c=''},
+    --[3232] = {id=3232,trust='LehkoHabhoka',en='Iridal Pierce',skillchain_a='',skillchain_b='',skillchain_c=''},
+    --[3233] = {id=3233,trust='LehkoHabhoka',en='Lunar Revolution',skillchain_a='',skillchain_b='',skillchain_c=''},
+    [3234] = {id=3234,trust='Prishe',en="Nullifying Dropkick",skillchain_a='Induration',skillchain_b='',skillchain_c=''},
+    [3235] = {id=3235,trust='Prishe',en="Auroral Uppercut",skillchain_a='Fragmentation',skillchain_b='',skillchain_c=''},
+    [3236] = {id=3236,trust='Prishe',en="Knuckle Sandwich",skillchain_a='Fusion',skillchain_b='',skillchain_c=''},
+    --[3238] = {id=3238,trust='Gadalar',en="Salamander Flame",skillchain_a='',skillchain_b='',skillchain_c=''},
+    --[3239] = {id=3239,trust='Najelith',en='Typhonic Arrow',skillchain_a='',skillchain_b='',skillchain_c=''},
+    [3240] = {id=3240,trust='Zarag',en='Meteoric Impact',skillchain_a='Fragmentation',skillchain_b='',skillchain_c=''},
+    --[3243] = {id=3243,trust='Nashmeira',en='Imperial Authority',skillchain_a='',skillchain_b='',skillchain_c=''},
+    [3252] = {id=3252,trust='Luzaf',en="Bisection",skillchain_a='Fragmentation',skillchain_b='Scission'},
+    [3253] = {id=3253,trust='Luzaf',en='Leaden Salute',skillchain_a='Gravitation',skillchain_b='Transfixion',skillchain_c=''},
+    [3254] = {id=3254,trust='Luzaf',en='Akimbo Shot',skillchain_a='Reverberation',skillchain_b='Detonation',skillchain_c=''},
+    [3255] = {id=3255,trust='Luzaf',en="Grisly Horizon",skillchain_a='Gravitation',skillchain_b='',skillchain_c=''},
+    [3337] = {id=3337,trust='Karaha-Baruha',en='Lunar Bay',skillchain_a='Gravitation',skillchain_b='',skillchain_c=''},
+    --[3355] = {id=3355,trust='Abenzio',en='Blow',skillchain_a='',skillchain_b='',skillchain_c=''},
+    --[3356] = {id=3356,trust='Abenzio',en='Uppercut',skillchain_a='',skillchain_b='',skillchain_c=''},
+    --[3357] = {id=3357,trust='Abenzio',en='Antiphase',skillchain_a='',skillchain_b='',skillchain_c=''},
+    --[3358] = {id=3358,trust='Abenzio',en='Blank Gaze',skillchain_a='',skillchain_b='',skillchain_c=''},
+    [3418] = {id=3418,trust='Tenzen',en='Amatsu: Torimai',skillchain_a='Transfixion',skillchain_b='Scission',skillchain_c=''},
+    [3419] = {id=3419,trust='Tenzen',en='Amatsu: Kazakiri',skillchain_a='Scission',skillchain_b='Detonation',skillchain_c=''},
+    [3420] = {id=3420,trust='Tenzen',en='Amatsu: Yukiarashi',skillchain_a='Induration',skillchain_b='Detonation',skillchain_c=''},
+    [3421] = {id=3421,trust='Tenzen',en='Amatsu: Tsukioboro',skillchain_a='Distortion',skillchain_b='Reverberation',skillchain_c=''},
+    [3422] = {id=3422,trust='Tenzen',en='Amatsu: Hanaikusa',skillchain_a='Fusion',skillchain_b='Compression',skillchain_c=''},
+    [3424] = {id=3424,trust='NanaaMihgo',en='Dancing Edge',skillchain_a='Scission',skillchain_b='Detonation',skillchain_c=''},
+    [3438] = {id=3438,trust='Areuhat',en='Dragon Breath',skillchain_a='Light',skillchain_b='Fusion',skillchain_c=''},
+    [3439] = {id=3439,trust='Areuhat',en='Hurricane Wing',skillchain_a='Detonation',skillchain_b='',skillchain_c=''},
+    [3487] = {id=3487,trust='SemihLafihna',en='Sidewinder',skillchain_a='Reverberation',skillchain_b='Transfixion',skillchain_c='Detonation'},
+    [3488] = {id=3488,trust='SemihLafihna',en='Arching Arrow',skillchain_a='Fusion',skillchain_b='',skillchain_c=''},
+    [3491] = {id=3491,trust='Lion',en='Grapeshot',skillchain_a='Transfixion',skillchain_b='Reverberation',skillchain_c=''},
+    [3492] = {id=3492,trust='Lion',en='Pirate Pummel',skillchain_a='Fusion',skillchain_b='',skillchain_c=''},
+    [3493] = {id=3493,trust='Lion',en='Powder Keg',skillchain_a='Fusion',skillchain_b='Compression',skillchain_c=''},
+    [3494] = {id=3494,trust='Lion',en='Walk the Plank',skillchain_a='Light',skillchain_b='Distortion',skillchain_c=''},
+    [3495] = {id=3495,trust='Zeid',en='Ground Strike',skillchain_a='Fragmentation',skillchain_b='Distortion',skillchain_c=''},
+    -- Jug Pet
+    [3840] = {id=3840,en='Foot Kick',skillchain_a='Reverberation',skillchain_b=''},
+    [3842] = {id=3842,en='Whirl Claws',skillchain_a='Impaction',skillchain_b=''},
+    [3843] = {id=3843,en='Head Butt',skillchain_a='Detonation',skillchain_b=''},
+    [3845] = {id=3845,en='Wild Oats',skillchain_a='Transfixion',skillchain_b=''},
+    [3846] = {id=3846,en='Leaf Dagger',skillchain_a='Scission',skillchain_b=''},
+    [3849] = {id=3849,en='Razor Fang',skillchain_a='Impaction',skillchain_b=''},
+    [3850] = {id=3850,en='Claw Cyclone',skillchain_a='Scission',skillchain_b=''},
+    [3851] = {id=3851,en='Tail Blow',skillchain_a='Impaction',skillchain_b=''},
+    [3853] = {id=3853,en='Blockhead',skillchain_a='Reverberation',skillchain_b=''},
+    [3854] = {id=3854,en='Brain Crush',skillchain_a='Liquefaction',skillchain_b=''},
+    [3857] = {id=3857,en='Lamb Chop',skillchain_a='Impaction',skillchain_b=''},
+    [3859] = {id=3859,en='Sheep Charge',skillchain_a='Reverberation',skillchain_b=''},
+    [3863] = {id=3863,en='Big Scissor',skillchain_a='Scission',skillchain_b=''},
+    [3866] = {id=3866,en='Needleshot',skillchain_a='Transfixion',skillchain_b=''},
+    [3867] = {id=3867,en='??? Needles',skillchain_a='Darkness',skillchain_b='Fragmentation'},
+    [3868] = {id=3868,en='Frog Kick',skillchain_a='Compression',skillchain_b=''},
+    [3875] = {id=3875,en='Power Attack',skillchain_a='Induration',skillchain_b=''},
+    [3877] = {id=3877,en='Rhino Attack',skillchain_a='Detonation',skillchain_b=''},
+    [3885] = {id=3885,en='Mandibular Bite',skillchain_a='Detonation',skillchain_b=''},
+    [3891] = {id=3891,en='Nimble Snap',skillchain_a='Impaction',skillchain_b=''},
+    [3892] = {id=3892,en='Cyclotail',skillchain_a='Impaction',skillchain_b=''},
+    [3894] = {id=3894,en='Double Claw',skillchain_a='Liquefaction',skillchain_b=''},
+    [3895] = {id=3895,en='Grapple',skillchain_a='Reverberation',skillchain_b=''},
+    [3897] = {id=3897,en='Spinning Top',skillchain_a='Impaction',skillchain_b=''},
+    [3900] = {id=3900,en='Suction',skillchain_a='Compression',skillchain_b=''},
+    [3904] = {id=3904,en='Sudden Lunge',skillchain_a='Impaction',skillchain_b=''},
+    [3905] = {id=3905,en='Spiral Spin',skillchain_a='Scission',skillchain_b=''},
+    [3909] = {id=3909,en='Scythe Tail',skillchain_a='Liquefaction',skillchain_b=''},
+    [3910] = {id=3910,en='Ripper Fang',skillchain_a='Induration',skillchain_b=''},
+    [3911] = {id=3911,en='Chomp Rush',skillchain_a='Darkness',skillchain_b='Gravitation'},
+    [3915] = {id=3915,en='Back Heel',skillchain_a='Reverberation',skillchain_b=''},
+    [3919] = {id=3919,en='Tortoise Stomp',skillchain_a='Liquefaction',skillchain_b=''},
+    [3922] = {id=3922,en='Wing Slap',skillchain_a='Liquefaction',skillchain_b='Scission'},
+    [3923] = {id=3923,en='Beak Lunge',skillchain_a='Scission',skillchain_b=''},
+    [3925] = {id=3925,en='Recoil Dive',skillchain_a='Transfixion',skillchain_b=''},
+    [3927] = {id=3927,en='Sensilla Blades',skillchain_a='Scission',skillchain_b=''},
+    [3928] = {id=3928,en='Tegmina Buffet',skillchain_a='Distortion',skillchain_b='Detonation'},
+    [3930] = {id=3930,en='Swooping Frenzy',skillchain_a='Fusion',skillchain_b='Reverberation'},
+    [3931] = {id=3931,en='Sweeping Gouge',skillchain_a='Induration',skillchain_b=''},
+    [3933] = {id=3933,en='Pentapeck',skillchain_a='Distortion',skillchain_b=''},
+    [3934] = {id=3934,en='Tickling Tendrils',skillchain_a='Impaction',skillchain_b=''},
+    [3938] = {id=3938,en='Somersault',skillchain_a='Compression',skillchain_b=''},
+    [3941] = {id=3941,en='Pecking Flurry',skillchain_a='Transfixion',skillchain_b=''},
+    [3942] = {id=3942,en='Sickle Slash,',skillchain_a='Transfixion',skillchain_b=''},
+    }
 
-function apply_props(packet,ability)
+function apply_props(packet,abil,ability)
+    if not abil then return end
     local mob_id = packet['Target 1 ID']
     local mob = windower.ffxi.get_mob_by_id(mob_id)
     if not mob or not mob.is_npc or mob.hpp == 0 then return end
-    local abil = res[ability][packet.Param]
-    if abil and ability == 'spells' then
-        if abil.skill == 43 then
-            abil = blue_mage[packet.Param]
-        elseif abil.skill == 36 then
-            abil.skillchain_a = elements[abil.element].sc
-        else
-            return
-        end
-    elseif abil and ability == 'job_abilities' then
-        abil = blood_pacts[packet.Param]
-    end
-    if not abil then return end
     local skillchain = packet['Target 1 Action 1 Has Added Effect'] and skillchains[packet['Target 1 Action 1 Added Effect Message']]
     local now = os.time()
     if skillchain then
         local reson = resonating[mob_id]
-        local step = reson.step and reson.step + 1
+        local step = (reson and reson.step or 1) + 1
         local closed
         if lvl3:contains(skillchain) and reson and not reson.closed and reson.active[1] == skillchain and
         (reson.chain or reson.ws.skillchain_a == abil.skillchain_a) then
             closed = true
         end
         resonating[mob_id] = {active={skillchain},timer=now,ws=abil,chain=true,closed=closed,step=step}
-    elseif L{185,187}:contains(packet['Target 1 Action 1 Message']) then           
+    elseif L{110,161,162,185,187}:contains(packet['Target 1 Action 1 Message']) then           
         resonating[mob_id] = {active={abil.skillchain_a,abil.skillchain_b,abil.skillchain_c},timer=now,ws=abil,chain=false,step=1}
     elseif L{317}:contains(packet['Target 1 Action 1 Message']) then
         resonating[mob_id] = {active={abil.skillchain_a},timer=now,ws=abil,chain=false,step=1}
-    elseif ability == 'spells' and abil.skill == 36 and chain_ability[packet.Actor] and now-chain_ability[packet.Actor] <= 60 then
+    elseif ability == 'spells' and chain_ability[packet.Actor] and now-chain_ability[packet.Actor] <= 60 then
         resonating[mob_id] = {active={active},timer=now,ws=abil,chain=false,step=1}
-    elseif ability == 'spells' and abil.skill == 43 and packet['Target 1 Action 1 Message'] == 2 and 
+        chain_ability[packet.Actor] = nil
+    elseif ability == 'blue_magic' and packet['Target 1 Action 1 Message'] == 2 and 
     (azure_lore[packet.Actor] or chain_ability[packet.Actor]) and 
     (now-azure_lore[packet.Actor] <= 40 or now-chain_ability[packet.Actor] <= 30) then
         resonating[mob_id] = {active={abil.skillchain_a,abil.skillchain_b},timer=now,ws=abil,chain=false,step=1}
-    end
-    if chain_ability[packet.Actor] and abil.skill and (abil.skill == 43 or abil.skill == 36) then
         chain_ability[packet.Actor] = nil
     end
+    
     if not resonating[mob_id] then return end
     for k,element in ipairs(resonating[mob_id].active) do
         if element == '' then resonating[mob_id].active[k] = nil end
@@ -218,7 +303,7 @@ function burst_results(reson)
     local stra,strb = '',''
     for k,element in ipairs(reson.active) do
         stra = stra..' [%s]':format(element)
-        if settings.ma and resonating.chain and not reson.mb_flag then
+        if settings.ma and reson.chain and not reson.mb_flag then
             strb = strb..'\n (Burst: %s)':format(prop_info[element].elements)
         end
     end
@@ -233,7 +318,7 @@ function chain_results(reson)
     if m_job == 'SMN' then
         spell_table = blood_pacts
     elseif m_job == 'BLU' then
-        spell_table = blue_mage
+        spell_table = blue_magic
     elseif m_job == 'SCH' and settings.ma then
         sch = true
     end
@@ -242,7 +327,7 @@ function chain_results(reson)
         for x=1,#props do
             for k,v in pairs(props[x]) do
                 local lvl = prop_info[v].level
-                if reson.chain and lvl3:contains(v) and lvl3:contains(element) then
+                if lvl3:contains(v) and lvl3:contains(element) then
                     lvl = 4
                 end
                 if sch then
@@ -294,7 +379,6 @@ function display_results(targ)
             end
         end
     end
-    if str == '' and burst == '' then return '' end
     return ' Step: %d >> [%s] >>':format(resonating[targ].step,resonating[targ].ws.en)..chain..burst..str
 end
 
@@ -302,16 +386,19 @@ windower.register_event('prerender', function()
     local targ = windower.ffxi.get_mob_by_target('t')
     local now = os.time()
     for k,v in pairs(resonating) do
-        if now-v.timer > 10 then
+        if now-v.timer >= 10 then
             resonating[k] = nil
         end
     end
     if targ and targ.hpp > 0 and resonating[targ.id] and not resonating[targ.id].closed then
-        local disp_info = display_results(targ.id)
+        if not resonating[targ.id].disp_info then
+            resonating[targ.id].disp_info = display_results(targ.id)
+        end
+        local disp_info = resonating[targ.id].disp_info
         if now-resonating[targ.id].timer < 3 then
-            disp_info = ' wait %s \n':format(math.abs(math.floor(now-resonating[targ.id].timer-3)))..disp_info
+            disp_info = ' wait %s \n':format(3-(now-resonating[targ.id].timer))..disp_info
         elseif now-resonating[targ.id].timer < 10 then
-            disp_info = ' GO! %s \n':format(math.abs(math.floor(now-resonating[targ.id].timer-10)))..disp_info
+            disp_info = ' GO! %s \n':format(10-(now-resonating[targ.id].timer))..disp_info
         end
         skill_props:text(disp_info)
         skill_props:show()
@@ -323,28 +410,46 @@ end)
 windower.register_event('incoming chunk', function(id,original,modified,injected,blocked)
     if id == 0x028 then
         local packet = packets.parse('incoming', original)
-        local play = windower.ffxi.get_player()
-        -- Finish Using Weapon Skill
-        if not play then return end
+        -- Weapon Skill finish
         if packet['Category'] == 3 then
-            apply_props(packet,'weapon_skills',play)
-        -- Finish Casting Magic
+            local abil = res.weapon_skills[packet.Param]
+            if abil and abil.skillchain_a and abil.skillchain_a ~= '' then
+                apply_props(packet,abil,'weapon_skills')
+            end
+        -- Casting finish
         elseif packet['Category'] == 4 then
             if packet['Target 1 Action 1 Message'] == 252 then
                 resonating[packet['Target 1 ID']].mb_flag = true
             else
-                apply_props(packet,'spells',play)
+                local abil = res.spells[packet.Param]
+                if abil and abil.skill == 43 then
+                    abil = blue_magic[packet.Param]
+                    apply_props(packet,abil,'blue_magic')
+                elseif abil and abil.skill == 36 then
+                    abil.skillchain_a = elements[abil.element].sc
+                    apply_props(packet,abil,'spells')
+                end
             end
-        -- Finish Job Ability Usage   
+        -- Job Ability
         elseif packet['Category'] == 6 then
-            if packet.Param == 94 or packet.Param == 317 then
-                chain_ability[packet.Actor] = os.time()
-            elseif packet.Param == 93 then
+            if packet.Param == 93 then
                 azure_lore[packet.Actor] = os.time()
+            elseif packet.Param == 94 or packet.Param == 317 then
+                chain_ability[packet.Actor] = os.time()
+            --elseif packet.Param == 320 then
             end
-        -- Finish Pet Move
+        -- NPC TP finish
+        elseif packet['Category'] == 11 then
+            local abil = npc_move[packet.Param]
+            if abil then
+                apply_props(packet,abil,'monster_abilities')
+            end
+        -- Avatar TP finish
         elseif packet['Category'] == 13 then
-            apply_props(packet,'job_abilities',play)
+            local abil = blood_pacts[packet.Param]
+            if abil then
+                apply_props(packet,abil,'job_abilities')
+            end
         end
     end
 end)
@@ -360,7 +465,7 @@ windower.register_event('addon command', function(...)
             return
         end
         visible = false
-    elseif default[commands[1]] then
+    elseif S{'ma','ws'}:contains(commands[1]) then
         if not commands[2] then
             settings[commands[1]] = not settings[commands[1]]
         elseif commands[2] == 'off' then
@@ -373,3 +478,11 @@ windower.register_event('addon command', function(...)
         assert(loadstring(table.concat(commands, ' ',2)))()
     end
 end)
+
+function reset()
+    chain_ability = {}  
+    resonating = {}
+    azure_lore = {}
+end
+
+windower.register_event('load','zone change','logout', reset)
