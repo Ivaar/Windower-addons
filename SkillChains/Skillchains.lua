@@ -303,7 +303,7 @@ function burst_results(reson)
     local stra,strb = '',''
     for k,element in ipairs(reson.active) do
         stra = stra..' [%s]':format(element)
-        if settings.ma and reson.chain and not reson.mb_flag then
+        if settings.ma and reson.chain then
             strb = strb..'\n (Burst: %s)':format(prop_info[element].elements)
         end
     end
@@ -418,9 +418,7 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
             end
         -- Casting finish
         elseif packet['Category'] == 4 then
-            if packet['Target 1 Action 1 Message'] == 252 then
-                resonating[packet['Target 1 ID']].mb_flag = true
-            else
+            if packet['Target 1 Action 1 Message'] ~= 252 then
                 local abil = res.spells[packet.Param]
                 if abil and abil.skill == 43 then
                     abil = blue_magic[packet.Param]
