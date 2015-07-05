@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.command = 'sc'
 _addon.name = 'SkillChains'
-_addon.version = '1.15.07.02'
+_addon.version = '1.15.07.05'
 
 texts = require('texts')
 packets = require('packets')
@@ -191,7 +191,7 @@ npc_move = L{
     --[3238] = {id=3238,trust='Gadalar',en="Salamander Flame",skillchain_a='',skillchain_b='',skillchain_c=''},
     --[3239] = {id=3239,trust='Najelith',en='Typhonic Arrow',skillchain_a='',skillchain_b='',skillchain_c=''},
     [3240] = {id=3240,trust='Zarag',en='Meteoric Impact',skillchain_a='Fragmentation',skillchain_b='',skillchain_c=''},
-    --[3243] = {id=3243,trust='Nashmeira',en='Imperial Authority',skillchain_a='',skillchain_b='',skillchain_c=''},
+    [3243] = {id=3243,trust='Nashmeira',en='Imperial Authority',skillchain_a='Fragmentation',skillchain_b='',skillchain_c=''},
     [3252] = {id=3252,trust='Luzaf',en="Bisection",skillchain_a='Fragmentation',skillchain_b='Scission'},
     [3253] = {id=3253,trust='Luzaf',en='Leaden Salute',skillchain_a='Gravitation',skillchain_b='Transfixion',skillchain_c=''},
     [3254] = {id=3254,trust='Luzaf',en='Akimbo Shot',skillchain_a='Reverberation',skillchain_b='Detonation',skillchain_c=''},
@@ -283,20 +283,29 @@ function apply_props(packet,abil,ability)
         resonating[mob_id] = {active={abil.skillchain_a,abil.skillchain_b,abil.skillchain_c},timer=now,ws=abil,chain=false,step=1}
     elseif L{317}:contains(packet['Target 1 Action 1 Message']) then
         resonating[mob_id] = {active={abil.skillchain_a},timer=now,ws=abil,chain=false,step=1}
-    elseif ability == 'spells' and chain_ability[packet.Actor] and now-chain_ability[packet.Actor] <= 60 then
+    elseif ability == 'spells' and chain_ability.sch[packet.Actor] then
         resonating[mob_id] = {active={active},timer=now,ws=abil,chain=false,step=1}
-        chain_ability[packet.Actor] = nil
+        chain_ability.sch[packet.Actor] = nil
     elseif ability == 'blue_magic' and packet['Target 1 Action 1 Message'] == 2 and 
-    (azure_lore[packet.Actor] or chain_ability[packet.Actor]) and 
-    (now-azure_lore[packet.Actor] <= 40 or now-chain_ability[packet.Actor] <= 30) then
+    (chain_ability.azure[packet.Actor] or chain_ability.blu[packet.Actor]) then
         resonating[mob_id] = {active={abil.skillchain_a,abil.skillchain_b},timer=now,ws=abil,chain=false,step=1}
-        chain_ability[packet.Actor] = nil
+        chain_ability.blu[packet.Actor] = nil
     end
     
     if not resonating[mob_id] then return end
+    
     for k,element in ipairs(resonating[mob_id].active) do
         if element == '' then resonating[mob_id].active[k] = nil end
     end
+end
+
+function delete_timer(dur,...)
+    coroutine.schedule(function(...)
+        local args = {...}
+        return function()
+          chain_ability[args[1]][args[2]] = nil
+        end
+    end(...), dur)
 end
 
 function burst_results(reson)
@@ -386,7 +395,7 @@ windower.register_event('prerender', function()
     local targ = windower.ffxi.get_mob_by_target('t')
     local now = os.time()
     for k,v in pairs(resonating) do
-        if now-v.timer >= 10 then
+        if v.timer and now-v.timer >= 10 then
             resonating[k] = nil
         end
     end
@@ -403,7 +412,7 @@ windower.register_event('prerender', function()
         skill_props:text(disp_info)
         skill_props:show()
     elseif not visible then
-        skill_props:hide()        
+        skill_props:hide()
     end
 end)
 
@@ -417,23 +426,26 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
                 apply_props(packet,abil,'weapon_skills')
             end
         -- Casting finish
-        elseif packet['Category'] == 4 then
-            if packet['Target 1 Action 1 Message'] ~= 252 then
-                local abil = res.spells[packet.Param]
-                if abil and abil.skill == 43 then
-                    abil = blue_magic[packet.Param]
-                    apply_props(packet,abil,'blue_magic')
-                elseif abil and abil.skill == 36 then
-                    abil.skillchain_a = elements[abil.element].sc
-                    apply_props(packet,abil,'spells')
-                end
+        elseif packet['Category'] == 4 and packet['Target 1 Action 1 Message'] ~= 252 then
+            local abil = res.spells[packet.Param]
+            if abil and abil.skill == 43 then
+                abil = blue_magic[packet.Param]
+                apply_props(packet,abil,'blue_magic')
+            elseif abil and abil.skill == 36 then
+                abil.skillchain_a = elements[abil.element].sc
+                apply_props(packet,abil,'spells')
             end
         -- Job Ability
         elseif packet['Category'] == 6 then
             if packet.Param == 93 then
-                azure_lore[packet.Actor] = os.time()
-            elseif packet.Param == 94 or packet.Param == 317 then
-                chain_ability[packet.Actor] = os.time()
+                chain_ability.azure[packet.Actor] = true
+                delete_timer(40,'azure',packet.Actor)
+            elseif packet.Param == 94 then
+                chain_ability.blu[packet.Actor] = true
+                delete_timer(30,'blu',packet.Actor)
+            elseif packet.Param == 317 then
+                chain_ability.sch[packet.Actor] = true
+                delete_timer(60,'sch',packet.Actor)
             --elseif packet.Param == 320 then
             end
         -- NPC TP finish
@@ -478,9 +490,8 @@ windower.register_event('addon command', function(...)
 end)
 
 function reset()
-    chain_ability = {}  
+    chain_ability = {azure={},sch={},blu={}}
     resonating = {}
-    azure_lore = {}
 end
 
 windower.register_event('load','zone change','logout', reset)
