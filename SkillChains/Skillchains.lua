@@ -260,7 +260,7 @@ npc_move = L{
     [3934] = {id=3934,en='Tickling Tendrils',skillchain_a='Impaction',skillchain_b=''},
     [3938] = {id=3938,en='Somersault',skillchain_a='Compression',skillchain_b=''},
     [3941] = {id=3941,en='Pecking Flurry',skillchain_a='Transfixion',skillchain_b=''},
-    [3942] = {id=3942,en='Sickle Slash,',skillchain_a='Transfixion',skillchain_b=''},
+    [3942] = {id=3942,en='Sickle Slash',skillchain_a='Transfixion',skillchain_b=''},
     }
 
 function apply_props(packet,abil,ability)
