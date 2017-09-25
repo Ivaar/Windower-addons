@@ -150,7 +150,7 @@ end
 function get.aoe_range()
     for ind,member in pairs(windower.ffxi.get_party()) do
         if type(member) == 'table' and member.mob and member.mob.in_party and member.mob.hpp > 0 and
-        (not settings.song[member.mob.name:lower()] or not settings.ignore[member.mob.name:lower()]) and
+        not settings.song[member.mob.name:lower()] and not settings.ignore:find(member.mob.name:lower()) and
         math.sqrt(member.mob.distance) >= 10 and not member.mob.charmed then
            return false
         end
