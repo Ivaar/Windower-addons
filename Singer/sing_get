@@ -86,7 +86,7 @@ function get.maxsongs(targ,buffs)
     if buffs['clarion call'] then
         maxsongs = maxsongs + 1 
     end
-    if maxsongs < table.length(timers[targ]) then
+    if timers[targ] and maxsongs < table.length(timers[targ]) then--
         maxsongs = table.length(timers[targ])
     end
     return maxsongs
