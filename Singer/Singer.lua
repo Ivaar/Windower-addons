@@ -213,7 +213,7 @@ windower.register_event('addon command', function(...)
     else
         if commands[1] == 'save' then
             settings:save()
-            addon_message('settingss Saved.')
+            addon_message('settings Saved.')
         elseif commands[1] == 'ignore' and commands[3] then
             local ind = settings.ignore:find(commands[2])
             if ind and (not commands[3] or commands[3] and commands[3] == '-') then
