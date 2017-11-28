@@ -7,16 +7,27 @@ function song_timers.duration(name,buffs)
     if get.equip('main') == 'Carnwenhan' then mult = mult + 0.5 end    -- 0.1 for 75, 0.4 for 95, 0.5 for 99/119
     if get.equip('main') == 'Legato Dagger' then mult = mult + 0.05 end
     if get.equip('sub') == 'Legato Dagger' then mult = mult + 0.05 end
+    if get.equip('main') == 'Kali' then mult = mult + 0.05 end
+    if get.equip('sub') == 'Kali' then mult = mult + 0.05 end
     if get.equip('neck') == 'Aoidos\' Matinee' then mult = mult + 0.1 end
+    if get.equip('neck') == 'Brioso Whistle' then mult = mult + 0.1 end
+    if get.equip('neck') == 'Moonbow Whistle' then mult = mult + 0.2 end
+    if get.equip('neck') == 'Mnbw. Whistle +1' then mult = mult + 0.3 end
     if get.equip('body') == 'Aoidos\' Hngrln. +2' then mult = mult + 0.1 end
-    if get.equip('legs') == 'Mdk. Shalwar +1' then mult = mult + 0.1 end
-    if get.equip('feet') == 'Brioso Slippers' then mult = mult + 0.1 end
-    if get.equip('feet') == 'Brioso Slippers +1' then mult = mult + 0.11 end
     if get.equip('body') == 'Fili Hongreline' then mult = mult + 0.11 end
     if get.equip('body') == 'Fili Hongreline +1' then mult = mult + 0.12 end
-    if string.find(name,'March') and (get.equip('hands') == 'Ad. Mnchtte. +2' or string.find(get.equip('hands'),'Fili Manchettes')) then mult = mult + 0.1 end
+    if get.equip('legs') == 'Mdk. Shalwar +1' then mult = mult + 0.1 end
+    if get.equip('legs') == 'Inyanga Shalwar' then mult = mult + 0.12 end
+    if get.equip('legs') == 'Inyanga Shalwar +1' then mult = mult + 0.15 end
+    if get.equip('legs') == 'Inyanga Shalwar +2' then mult = mult + 0.17 end
+    if get.equip('feet') == 'Brioso Slippers' then mult = mult + 0.1 end
+    if get.equip('feet') == 'Brioso Slippers +1' then mult = mult + 0.11 end
+    if get.equip('feet') == 'Brioso Slippers +2' then mult = mult + 0.13 end
+    if get.equip('feet') == 'Brioso Slippers +3' then mult = mult + 0.15 end
+    if string.find(name,'March') and (get.equip('hands') == 'Ad. Mnchtte. +2' or string.find(get.equip('hands'),'Fili Manchettes')) then mult = mult + 0.1  windower.add_to_chat(204,'march') end
     if string.find(name,'Minuet') and (get.equip('body') == 'Aoidos\' Hngrln. +2' or string.find(get.equip('body'),'Fili Hongreline')) then mult = mult + 0.1 end
     if string.find(name,'Madrigal') and (get.equip('head') == 'Aoidos\' Calot +2' or string.find(get.equip('head'),'Fili Calot')) then mult = mult + 0.1 end
+    if string.find(name,'Madrigal') or string.find(name,'Prelude') and get.equip('back') == 'Intarabus\'s Cape' then mult = mult + 0.1 end
     if string.find(name,'Ballad') and (get.equip('legs') == 'Aoidos\' Rhing. +2' or string.find(get.equip('legs'),'Fili Rhingrave')) then mult = mult + 0.1 end
     if string.find(name,'Scherzo') and (get.equip('feet') == 'Aoidos\' Cothrn. +2' or string.find(get.equip('feet'),'Fili Cothurnes')) then mult = mult + 0.1 end
     if string.find(name,'Paeon') and string.find(get.equip('head'),'Brioso Roundlet') then mult = mult + 0.1 end
