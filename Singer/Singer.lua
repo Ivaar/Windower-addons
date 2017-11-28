@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.15.06.24'
+_addon.version = '1.17.11.28'
 require('luau')
 require('pack')
 packets = require('packets')
@@ -169,9 +169,7 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
             end
             for x = 1,packet['Target Count'] do
                 local targ_name = windower.ffxi.get_mob_by_id(packet['Target '..x..' ID']).name
-                if not settings.ignore:contains(targ:lower()) then
-                    song_timers.adjust(spell_name,targ_name,buffs)
-                end
+                song_timers.adjust(spell_name,targ_name,buffs)
             end
         elseif L{3,5}:contains(packet['Category']) and actor == play.name then
             casting = false
@@ -213,7 +211,7 @@ windower.register_event('addon command', function(...)
     else
         if commands[1] == 'save' then
             settings:save()
-            addon_message('settingss Saved.')
+            addon_message('settings Saved.')
         elseif commands[1] == 'ignore' and commands[3] then
             local ind = settings.ignore:find(commands[2])
             if ind and (not commands[3] or commands[3] and commands[3] == '-') then
