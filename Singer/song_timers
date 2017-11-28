@@ -24,7 +24,7 @@ function song_timers.duration(name,buffs)
     if get.equip('feet') == 'Brioso Slippers +1' then mult = mult + 0.11 end
     if get.equip('feet') == 'Brioso Slippers +2' then mult = mult + 0.13 end
     if get.equip('feet') == 'Brioso Slippers +3' then mult = mult + 0.15 end
-    if string.find(name,'March') and (get.equip('hands') == 'Ad. Mnchtte. +2' or string.find(get.equip('hands'),'Fili Manchettes')) then mult = mult + 0.1  windower.add_to_chat(204,'march') end
+    if string.find(name,'March') and (get.equip('hands') == 'Ad. Mnchtte. +2' or string.find(get.equip('hands'),'Fili Manchettes')) then mult = mult + 0.1 end
     if string.find(name,'Minuet') and (get.equip('body') == 'Aoidos\' Hngrln. +2' or string.find(get.equip('body'),'Fili Hongreline')) then mult = mult + 0.1 end
     if string.find(name,'Madrigal') and (get.equip('head') == 'Aoidos\' Calot +2' or string.find(get.equip('head'),'Fili Calot')) then mult = mult + 0.1 end
     if string.find(name,'Madrigal') or string.find(name,'Prelude') and get.equip('back') == 'Intarabus\'s Cape' then mult = mult + 0.1 end
