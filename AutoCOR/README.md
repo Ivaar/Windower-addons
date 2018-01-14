@@ -3,7 +3,6 @@
          "//cor [on/off]"
          "//cor roll [n] [job/roll_name]" -- set roll
          "//cor cc [n/off]"         -- Use crooked cards on roll [n] (default is 1st roll, 0 is off)
-         "//cor active [on/off]"    -- unimplemented
          "//cor save"               -- save settings on per character basis
             
         when setting rolls with commands it will check [job/roll_name] against the rolls job,
