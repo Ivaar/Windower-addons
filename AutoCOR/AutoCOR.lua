@@ -209,12 +209,12 @@ end)
 
 function reset()
     actions = false
-    casting = false
+    is_casting = false
     buffs = {}
 end
 
 function status_change(new,old)
-    casting = false
+    --is_casting = false
     if new > 1 and new < 4 then
         reset()
     end
