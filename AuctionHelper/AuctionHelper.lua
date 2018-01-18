@@ -10,7 +10,7 @@ windower.send_command('unload bidder')
 
 _addon.command = 'AH'
 _addon.name = 'AuctionHelper'
-_addon.version = '1.5.31.15'
+_addon.version = '1.18.01.17'
 _addon.author = 'Ivaar'
 
 default = {
@@ -49,7 +49,7 @@ local display_box = function()
                 str = str..string.format(' %s',auction_box[x].status);
             end	
             if (auction_box[x].status ~= 'Empty') then
-                local timer = auction_box[x].status == 'On auction' and auction_box[x].timestamp+248836 or auction_box[x].timestamp
+                local timer = auction_box[x].status == 'On auction' and auction_box[x].timestamp+829440 or auction_box[x].timestamp
                 if (settings.auction_list.timer) then
                     str = str..string.format(' %s',(auction_box[x].status == 'On auction' and os.time()-timer > 0) and 'Expired' or timef(math.abs(os.time()-timer)))
                 end
