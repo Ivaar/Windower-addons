@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.name = 'AutoCOR'
 _addon.commands = {'cor'}
-_addon.version = '1.18.01.13'
+_addon.version = '1.18.01.29'
 
 require('pack')
 require('lists')
@@ -118,7 +118,9 @@ end)
 windower.register_event('addon command', function(...)
     local commands = {...}
     commands[1] = commands[1] and commands[1]:lower()
-    if commands[1] == 'on' then
+    if not commands[1] then
+        actions = not actions
+    elseif commands[1] == 'on' then
         actions = true
     elseif commands[1] == 'off' then
         actions = false
