@@ -77,6 +77,7 @@ ids.equipment = L{
     [27429] = 'Fili Cothurnes',
     [27430] = 'Fili Cothurnes +1',
     [26255] = 'Intarabus\'s Cape',
+    [21398] = 'Marsyas',
     }
 
 ids.spells = L{
@@ -85,7 +86,7 @@ ids.spells = L{
     }
 
 ids.songs  = L{
-	[368] = 'Foe Requiem',
+    [368] = 'Foe Requiem',
     [369] = 'Foe Requiem II',
     [370] = 'Foe Requiem III',
     [371] = 'Foe Requiem IV',
