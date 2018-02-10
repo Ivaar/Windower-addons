@@ -2,6 +2,7 @@ local song_timers = {}
 
 function song_timers.duration(name,buffs)
     local mult = 1
+    if get.equip('range') == 'Marsyas' then mult = mult + 0.5 end
     if get.equip('range') == 'Daurdabla' then mult = mult + 0.3 end    -- 0.25 for 90, 0.3 for 99
     if get.equip('range') == 'Gjallarhorn' then mult = mult + 0.4 end  -- 0.3 for 95, 0.4 for 99
     if get.equip('main') == 'Carnwenhan' then mult = mult + 0.5 end    -- 0.1 for 75, 0.4 for 95, 0.5 for 99/119
