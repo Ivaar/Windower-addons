@@ -28,7 +28,7 @@ function song_timers.duration(name,buffs)
     if string.find(name,'March') and (get.equip('hands') == 'Ad. Mnchtte. +2' or string.find(get.equip('hands'),'Fili Manchettes')) then mult = mult + 0.1 end
     if string.find(name,'Minuet') and (get.equip('body') == 'Aoidos\' Hngrln. +2' or string.find(get.equip('body'),'Fili Hongreline')) then mult = mult + 0.1 end
     if string.find(name,'Madrigal') and (get.equip('head') == 'Aoidos\' Calot +2' or string.find(get.equip('head'),'Fili Calot')) then mult = mult + 0.1 end
-    if string.find(name,'Madrigal') or string.find(name,'Prelude') and get.equip('back') == 'Intarabus\'s Cape' then mult = mult + 0.1 end
+    if (string.find(name,'Madrigal') or string.find(name,'Prelude')) and get.equip('back') == 'Intarabus\'s Cape' then mult = mult + 0.1 end
     if string.find(name,'Ballad') and (get.equip('legs') == 'Aoidos\' Rhing. +2' or string.find(get.equip('legs'),'Fili Rhingrave')) then mult = mult + 0.1 end
     if string.find(name,'Scherzo') and (get.equip('feet') == 'Aoidos\' Cothrn. +2' or string.find(get.equip('feet'),'Fili Cothurnes')) then mult = mult + 0.1 end
     if string.find(name,'Paeon') and string.find(get.equip('head'),'Brioso Roundlet') then mult = mult + 0.1 end
