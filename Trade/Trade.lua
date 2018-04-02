@@ -1,39 +1,82 @@
-_addon.command = 'trade' 
+_addon.author = 'Ivaar'
+_addon.command = 'trade'
+_addon.name = 'Trade'
+_addon.version = '1.18.04.02'
 
-packets = require('packets')
+require('luau')
+require('pack')
 
-whitelist = L{
-    'names',
-}
-windower.register_event('addon command', function(name,bool)
-    local targ = name and windower.ffxi.get_mob_by_name(name) or windower.ffxi.get_mob_by_target('t') and windower.ffxi.get_mob_by_target('t')
-    if not bool and targ and math.sqrt(targ.distance) <= 6 and not targ.is_npc and whitelist:contains(targ.name) and targ.id ~= windower.ffxi.get_player().id then
-        windower.send_command('keyboard_blockinput 1;input /target %s;wait .2;setkey enter;wait .2;setkey enter up;wait .4;setkey up;wait .2;setkey up up;wait .2;setkey up;wait .2;setkey up up;setkey enter;wait .2;setkey enter up;wait .2;keyboard_blockinput 0;':format(name))
-    --elseif bool and targ and math.sqrt(targ.distance) < 6 and not targ.is_npc and whitelist:contains(targ.name) and targ.id ~= windower.ffxi.get_player().id then
-        --trade window opens for target but not for player
-        --print((targ.id%256):hex(), math.floor((targ.id/256)%256):hex(), math.floor((targ.id/65536)%256):hex(), math.floor((targ.id/16777216)%256):hex(), (targ.index%256):hex(), math.floor((targ.index/256)%256):hex())
-        --windower.packets.inject_outgoing(0x32,string.char(0x32,0x06,0,0, (targ.id%256), math.floor((targ.id/256)%256), math.floor((targ.id/65536)%256), math.floor((targ.id/16777216)%256), (targ.index%256), math.floor((targ.index/256)%256),0,0))
+default = {}
+default.whitelist = S{}
+
+settings = config.load(default)
+
+setkeys = 'setkey enter;wait .2;setkey enter up;wait .4;setkey up;wait .2;setkey up up;wait .2;setkey up;wait .2;setkey up up;setkey enter;wait .2;setkey enter up;wait .2;keyboard_blockinput 0;'
+
+windower.register_event('addon command', function(name, command)
+    name = name and name:lower():ucfirst()
+    command = command and command:lower()
+
+    if command == 'add' then
+        if not settings.whitelist:contains(name) then
+            settings.whitelist:add(name)
+            settings:save('all')
+        end
+        windower.add_to_chat(207, '%s: %s added to whitelist':format(_addon.name, name))
+        return
+    elseif command == 'remove' then
+        if settings.whitelist:contains(name) then
+            settings.whitelist:remove(name)
+            settings:save('all')
+        end
+        windower.add_to_chat(207, '%s: %s removed from whitelist':format(_addon.name, name))
+        return
     end
+
+    if command ~= 'ok' and name ~= 'Ok' and not settings.whitelist:contains(name) then return end
+
+    local targ = name ~= 'Ok' and windower.ffxi.get_mob_by_name(name) or windower.ffxi.get_mob_by_target('t')
+
+    if not targ or targ.is_npc or math.sqrt(targ.distance) > 6 then return end
+
+    windower.send_command('keyboard_blockinput 1')
+    windower.chat.input('/target %s':format(targ.name))
+    coroutine.sleep(0.2)
+    windower.send_command(setkeys)
+
+    --[[
+    local play = windower.ffxi.get_mob_by_target('me')
+
+    if play.status > 1 and play.status < 5 then return end
+
+    if targ.status > 1 and targ.status < 5 then return end
+
+    if play.id == targ.id then return end
+
+    windower.packets.inject_incoming(0x21, 'I2H2':pack(0x621, targ.id, targ.index, 0))
+    coroutine.sleep(0.1)
+    windower.packets.inject_outgoing(0x32, 'I2H2':pack(0x632, targ.id, targ.index, 0))
+    ]]
 end)
 
-windower.register_event('incoming chunk', function(id, original, modified, injected, blocked)
+windower.register_event('incoming chunk', function(id, data, modified, injected, blocked)
     if id == 0x021 then
-        local packet = packets.parse('incoming',original)
-        trader_name = windower.ffxi.get_mob_by_id(packet['Player']).name
-        if whitelist:contains(trader_name) then
-            windower.packets.inject_outgoing(0x33,string.char(0x33,0x06,0,0,0,0,0,0,0,0,0,0))
+        local trader = windower.ffxi.get_mob_by_id(data:unpack('I', 5))
+        if not injected and trader and settings.whitelist:contains(trader.name) then
+            local status = windower.ffxi.get_mob_by_target('me').status
+            if (status < 2 or status > 4) then
+                windower.packets.inject_outgoing(0x33, 'I3':pack(0x633, 0, 0))
+            end
         end
     elseif id == 0x022 then
-        local packet = packets.parse('incoming',original)
-            if packet['Type'] == 2 then
-            trader_name = windower.ffxi.get_mob_by_id(packet['Player']).name
-            if trade_count and whitelist:contains(trader_name) then
-                windower.packets.inject_outgoing(0x33,string.char(0x33,0x06,0,0,0x02,0,0,0, (trade_count%256), math.floor(trade_count/256),0,0))
+        if data:byte(9) == 0x02 then
+            if trade_count and settings.whitelist:contains(windower.ffxi.get_mob_by_id(data:unpack('I', 5)).name) then
+                windower.packets.inject_outgoing(0x33, 'I2H2':pack(0x633, 0x02, trade_count, 0))
             end
         else
             trade_count = 0
         end
     elseif id == 0x023 then
-        trade_count = original:byte(9)+original:byte(10)*256
+        trade_count = data:unpack('H', 9)
     end
 end)
