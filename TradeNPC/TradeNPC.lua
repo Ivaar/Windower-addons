@@ -65,7 +65,7 @@ windower.register_event('addon command', function(...)
             local units = tonumber(args[x*2-1])
             local name = windower.convert_auto_trans(args[x*2]):lower()
             local item = get_item_res(name)
-            if not item or item.flags['No NPC Sale'] == true then
+            if not item or item.flags['Linkshell'] == true then
                 print('"%s" not a valid item name: arg %d':format(name, x*2))
                 return
             end
