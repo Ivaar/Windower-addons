@@ -3,7 +3,7 @@ res_items = require('resources').items
 
 _addon.name = 'TradeNPC'
 _addon.author = 'Ivaar'
-_addon.version = '1.18.03.10'
+_addon.version = '1.18.04.09'
 _addon.command = 'tradenpc'
 
 function get_item_res(item)
@@ -41,7 +41,7 @@ windower.register_event('addon command', function(...)
     end
     if windower.ffxi.get_mob_by_target('me').status ~= 0 then return end
     local target = windower.ffxi.get_mob_by_target('t')
-    if target and target.is_npc and target.valid_target and target.distance <= 35.9 then
+    if target and target.is_npc and target.spawn_type == 2 and target.valid_target and target.distance <= 35.9 then
         local ind = {}
         local qty = {}
         local start = 1
