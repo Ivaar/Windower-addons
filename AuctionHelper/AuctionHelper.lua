@@ -4,13 +4,13 @@ config = require('config')
 packets = require('packets')
 res_items = require('resources').items
 res_zones = require('resources').zones
-
+extdata = require 'extdata'
 
 windower.send_command('unload bidder')
 
 _addon.command = 'AH'
 _addon.name = 'AuctionHelper'
-_addon.version = '1.18.01.17'
+_addon.version = '1.18.05.27'
 _addon.author = 'Ivaar'
 
 default = {
@@ -281,11 +281,12 @@ function get_item_res(item)
     return nil
 end
 
-function find_item(item_id,item_count)
+function find_item(item_id,item_count,max_charges)
     local items = windower.ffxi.get_items(0)
     for ind,item in ipairs(items) do
-        if item and item.id == item_id and item.count >= item_count and item.status == 0 then
-            return ind
+        if item and item.id == item_id and item.count >= item_count and item.status == 0 and
+            (not max_charges or max_charges == extdata.decode(item).charges_remaining) then
+                return ind
         end
     end
     return false
@@ -344,7 +345,7 @@ function ah_proposal(bid, item_name, vol, price)
     if not item then print('AH Error: %s not a valid item name.':format(item_name)) return false end
     
     if item.flags['No Auction'] == true then print(item.flags) return false end
-    
+
     local single
     if (item.stack ~= 1) and (vol == '1' or vol == 'stack') then
         single = 0
@@ -364,7 +365,7 @@ function ah_proposal(bid, item_name, vol, price)
         if not auction_box then print('AH Error: Click auction counter or use /ah to initialize sales.') return	end
         if not find_empty_slot() then print('AHPack Error: No Empty Slots Available.') return end
         trans = trans.. string.char(0x04,0,0,0, (price%256), (math.floor((price/256)%256)), (math.floor((price/65536)%256)), (math.floor((price/16777216)%256)))
-        local index = find_item(item.id, single == 1 and single or item.stack)
+        local index = find_item(item.id, single == 1 and single or item.stack, item.max_charges)
         if not index then print('AH Error: %s of %s not found in inventory.':format(single == 1 and 'Single' or 'Stack',item.en)) return end
         trans = trans..string.char((index%256), (math.floor((index/256)%256)), (item.id%256), (math.floor((item.id/256)%256)))
         --print('%s "%s" %s %s ID:%s Ind:%s':format(bid, item.en, comma_value(price),single == 1 and '[Single]' or '[Stack]',item.id,index))
