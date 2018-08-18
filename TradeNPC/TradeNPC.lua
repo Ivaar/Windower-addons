@@ -1,4 +1,5 @@
 require('pack')
+bit = require('bit')
 res_items = require('resources').items
 
 _addon.name = 'TradeNPC'
