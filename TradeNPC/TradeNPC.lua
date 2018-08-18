@@ -41,7 +41,7 @@ windower.register_event('addon command', function(...)
     end
     if windower.ffxi.get_mob_by_target('me').status ~= 0 then return end
     local target = windower.ffxi.get_mob_by_target('t')
-    if target and target.is_npc and target.spawn_type == 2 and target.valid_target and target.distance <= 35.9 then
+    if target and target.is_npc and bit.band(target.spawn_type, 2) == 2 and target.valid_target and target.distance <= 35.9 then
         local ind = {}
         local qty = {}
         local start = 1
