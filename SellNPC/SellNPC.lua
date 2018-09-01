@@ -1,89 +1,103 @@
 _addon.command = 'SellNPC'
-_addon.version = '1.0.0.3'
+_addon.version = '1.0.0.4'
 _addon.author = 'Ivaar'
 
-require 'lists'
-require 'tables'
-packets = require('packets')
+require('sets')
+config = require('config')
+profiles = require('profiles')
 res_items = require('resources').items
 
-sales_que = L{}
+default = {
+    delay = 1,
+    randomize_delay = true,
+    }
+
+settings = config.load(default)
+
+sales_que = {}
 
 function get_item_res(item)
     for k,v in pairs(res_items) do
-        if v.en:lower() == item:lower() or v.enl:lower() == item:lower() then
+        if v.en:lower() == item or v.enl:lower() == item then
             return v
         end
     end
     return nil
 end
 
-function find_item(item_id)
-    local items = windower.ffxi.get_items(0)
-    for ind,item in ipairs(items) do
-        if item and item.id == item_id and item.status == 0 then
-            return ind,item.count
-        end
-    end
-    return false
-end
-
-function check_que(item)
-    local ind = sales_que:find(item)
-    if ind then
-        table.remove(sales_que, ind)
-    end
-    if sales_que[1] then
-        return sell_npc_item(sales_que[1])
-    else
-        print('Selling Finished')
-    end
-end
-
 function check_item(name)
-    name = windower.convert_auto_trans(name)
+    local name = windower.convert_auto_trans(name):lower()
     local item = get_item_res(name)
-    if not item then actions=false,print('Error: %s not a valid item name.':format(name)) return check_que() end
-    if item.flags['No NPC Sale'] == true then actions=false,print('Error: Cannot sell %s to npc vendors':format(item.en)) return check_que(item.id) end
-    table.insert(sales_que, item.id)
-    if not actions then actions = true return sell_npc_item(item.id) end
+    if not item then
+        print('Error: %s not a valid item name.':format(name))
+        return
+    end
+    if item.flags['No NPC Sale'] then
+        print('Error: Cannot sell %s to npc vendors':format(item.en))
+    else
+        sales_que[item.id] = true
+        print('%s added to sales queue':format(item.en))
+    end
 end
 
-function sell_npc_item(item)
-    if not appraised then actions = false return end
-    local index,count = find_item(item)
-    if not index then 
-        actions=false
-        if not appraised[item] then
-            print('Error: %s not found in inventory.':format(res_items[item].en)) 
+function sell_appraised_items()
+    for index = 1, 80 do local item = windower.ffxi.get_items(0,index)
+        if item and appraised[item.id] and item.status == 0 then
+            windower.packets.inject_outgoing(0x084,string.char(0x084,0x06,0,0,item.count,0,0,0,item.id%256,math.floor(item.id/256)%256,index,0))
+            windower.packets.inject_outgoing(0x085,string.char(0x085,0x04,0,0,1,0,0,0))
+            if settings.delay > 0 then
+                coroutine.sleep(settings.delay + (settings.randomize_delay and math.random() or 0))
+            end
         end
-        return check_que(item) 
     end
-    if not appraised[item] then count = 1 end
-    windower.packets.inject_outgoing(0x084,string.char(0x084,0x06,0,0,(count%256),0,0,0,(item%256),(math.floor((item/256)%256)),(index%256),0))
-    if not appraised[item] then appraised[item]=true,coroutine.sleep((1+math.random())) return sell_npc_item(item) end
-    windower.packets.inject_outgoing(0x085,string.char(0x085,0x04,0,0,0x01,0,0,0))
-    coroutine.sleep((1+math.random()))
-    return sell_npc_item(item)
+    sales_que = {}
+    appraised = nil
+    requested = nil
+end
+
+function incoming_shop_packets(id, data)
+    if id == 0x03C then
+        appraised = {}
+        requested = {}
+        for index = 1, 80 do local item = windower.ffxi.get_items(0,index)
+            if item and sales_que[item.id] and not requested[item.id] and item.status == 0 then
+                requested[item.id] = true
+                windower.packets.inject_outgoing(0x084,string.char(0x084,0x06,0,0,1,0,0,0,item.id%256,math.floor(item.id/256)%256,index,0))
+            end
+        end
+    elseif id == 0x03D and appraised then
+        local item_id = windower.ffxi.get_items(0,data:byte(9)).id
+        if requested[item_id] and not appraised[item_id] then
+            appraised[item_id] = true
+            if not actions or coroutine.status(actions) == 'dead' then
+                actions = coroutine.schedule(sell_appraised_items, 1)
+            end
+        end
+    end
+end
+
+function reset()
+    coroutine.close(actions)
+    actions = nil
+    appraised = nil
+    requested = nil
 end
 
 function cmd(...)
     local commands = {...}
-    if commands[1] then
-        check_item(table.concat(commands,' ',1))
-    elseif appraised then
-        check_que()
+    if not commands[1] then
+    elseif commands[1] == 'delay' and tonumber(commands[2]) then
+        settings.delay = tonumber(commands[2])
+        settings:save('all')
+    elseif profiles[commands[1]] then
+        for name in pairs(profiles[commands[1]]) do
+            check_item(name)
+        end
+    else
+        check_item(table.concat(commands,' '))
     end
 end
+
+windower.register_event('incoming chunk', incoming_shop_packets)
+windower.register_event('zone change','logout','unload',  reset)
 windower.register_event('addon command', cmd)
-
-function reset()
-    appraised = nil
-end
-windower.register_event('zone change','logout',  reset)
-
-windower.register_event('incoming chunk', function(id, original, modified, injected, blocked)
-    if id == 0x03C then
-        appraised = {}
-    end
-end)
