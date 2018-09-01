@@ -1,5 +1,5 @@
 _addon.command = 'SellNPC'
-_addon.version = '1.0.0.4'
+_addon.version = '1.0.0.5'
 _addon.author = 'Ivaar'
 
 require('sets')
@@ -59,10 +59,12 @@ function incoming_shop_packets(id, data)
     if id == 0x03C then
         appraised = {}
         requested = {}
-        for index = 1, 80 do local item = windower.ffxi.get_items(0,index)
-            if item and sales_que[item.id] and not requested[item.id] and item.status == 0 then
-                requested[item.id] = true
-                windower.packets.inject_outgoing(0x084,string.char(0x084,0x06,0,0,1,0,0,0,item.id%256,math.floor(item.id/256)%256,index,0))
+        if not actions or coroutine.status(actions) == 'dead' then
+            for index = 1, 80 do local item = windower.ffxi.get_items(0,index)
+                if item and sales_que[item.id] and not requested[item.id] and item.status == 0 then
+                    requested[item.id] = true
+                    windower.packets.inject_outgoing(0x084,string.char(0x084,0x06,0,0,1,0,0,0,item.id%256,math.floor(item.id/256)%256,index,0))
+                end
             end
         end
     elseif id == 0x03D and appraised then
