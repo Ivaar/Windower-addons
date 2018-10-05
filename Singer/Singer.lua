@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.17.11.28'
+_addon.version = '1.18.10.04'
 
 require('luau')
 require('pack')
@@ -303,7 +303,7 @@ windower.register_event('addon command', function(...)
         elseif type(settings[commands[1]]) == 'boolean' then
             if (not commands[2] and settings[commands[1]] == true) or (commands[2] and commands[2] == 'off') then
                 settings[commands[1]] = false
-                if commands[1] == 'timers' then reset_timers(true) end
+                if commands[1] == 'timers' then song_timers.reset(true) end
             elseif (not commands[2]) or (commands[2] and commands[2] == 'on') then
                 settings[commands[1]] = true
             end

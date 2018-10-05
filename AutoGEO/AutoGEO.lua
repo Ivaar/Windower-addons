@@ -381,7 +381,7 @@ function check_incoming_chunk(id,original,modified,injected,blocked)
             elseif spell_ids[packet.Param] then
                 local spell = spell_ids[packet.Param]
                 local target = windower.ffxi.get_mob_by_id(packet['Target 1 ID'])
-                timers[spell.en:lower()][target.name:lower()] = os.time()+spell.dur 
+                timers[spell.enl:lower()][target.name:lower()] = os.time()+spell.dur 
             end
         elseif L{3,5,11}:contains(packet.Category) then -- 2 Ranged Attacks
             -- Finish Casting/WS/Item Use

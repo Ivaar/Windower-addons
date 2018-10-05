@@ -1,52 +1,57 @@
 local get = {}
 get.songs = {
-    paeon = {[1]='Army\'s Paeon VI',[2]='Army\'s Paeon V',[3]='Army\'s Paeon IV',[4]='Army\'s Paeon III',[5]='Army\'s Paeon II',[6]='Army\'s Paeon'},
-    ballad = {[1]='Mage\'s Ballad III',[2]='Mage\'s Ballad II',[3]='Mage\'s Ballad'},
-    minne = {[1]='Knight\'s Minne V',[2]='Knight\'s Minne IV',[3]='Knight\'s Minne III',[4]='Knight\'s Minne II',[5]='Knight\'s Minne'},
-    march = {[1]='Victory March',[2]='Advancing March'},
-    minuet = {[1]='Valor Minuet V',[2]='Valor Minuet IV',[3]='Valor Minuet III',[4]='Valor Minuet II',[5]='Valor Minuet'}, 
-    madrigal = {[1]='Blade Madrigal',[2]='Sword Madrigal'},
-    prelude = {[1]='Archer\'s Prelude',[2]='Hunter\'s Prelude'},
-    mambo = {[1]='Dragonfoe Mambo',[2]='Sheepfoe Mambo'},
-    aubade = {[1]='Fowl Aubade'},
-    pastoral = {[1]='Herb Pastoral'},
-    fantasia = {[1]='Shining Fantasia'},
-    operetta = {[1]='Puppet\'s Operetta',[2]='Scop\'s Operetta'},
-    capriccio = {[1]='Gold Capriccio'},
-    round = {[1]='Warding Round'},
-    gavotte = {[1]='Shining Fantasia'},
-    hymnus = {[1]='Goddess\'s Hymnus'},
-    mazurka = {[1]='Chocobo Mazurka'},
-    sirvente = {[1]='Foe Sirvente'},
-    dirge = {[1]='Adventurer\'s Dirge'},
-    scherzo = {[1]='Sentinel\'s Scherzo'},
+    paeon = {'Army\'s Paeon VI','Army\'s Paeon V','Army\'s Paeon IV','Army\'s Paeon III','Army\'s Paeon II','Army\'s Paeon'},
+    ballad = {'Mage\'s Ballad III','Mage\'s Ballad II','Mage\'s Ballad'},
+    minne = {'Knight\'s Minne V','Knight\'s Minne IV','Knight\'s Minne III','Knight\'s Minne II','Knight\'s Minne'},
+    march = {'Victory March','Advancing March'},
+    minuet = {'Valor Minuet V','Valor Minuet IV','Valor Minuet III','Valor Minuet II','Valor Minuet'}, 
+    madrigal = {'Blade Madrigal','Sword Madrigal'},
+    prelude = {'Archer\'s Prelude','Hunter\'s Prelude'},
+    mambo = {'Dragonfoe Mambo','Sheepfoe Mambo'},
+    aubade = {'Fowl Aubade'},
+    pastoral = {'Herb Pastoral'},
+    fantasia = {'Shining Fantasia'},
+    operetta = {'Puppet\'s Operetta','Scop\'s Operetta'},
+    capriccio = {'Gold Capriccio'},
+    round = {'Warding Round'},
+    gavotte = {'Shining Fantasia'},
+    hymnus = {'Goddess\'s Hymnus'},
+    mazurka = {'Chocobo Mazurka'},
+    sirvente = {'Foe Sirvente'},
+    dirge = {'Adventurer\'s Dirge'},
+    scherzo = {'Sentinel\'s Scherzo'},
     }
 
-function get.item(...)
-    local item_ids = L{...}
-    local items = windower.ffxi.get_items()
-    for i,v in ipairs(items.inventory) do
-        if item_ids:contains(v.id) then
-            return true
+local equippable_bags = {
+    'Inventory',
+    'Wardrobe',
+    'Wardrobe2',
+    'Wardrobe3',
+    'Wardrobe4'
+    }
+
+local extra_song_harp = {
+    [21407] = 3,
+    [18575] = 3,
+    [18576] = 3,
+    [21400] = 3,
+    [21401] = 3,
+    [18571] = 4,
+    [18839] = 4,
+}
+
+local function get_song_count()
+    for _, bag in ipairs(equippable_bags) do
+        for i,v in ipairs(windower.ffxi.get_items(bag)) do
+            if extra_song_harp[v.id] then
+                return extra_song_harp[v.id]
+            end
         end
     end
-    for i,v in ipairs(items.wardrobe) do
-        if item_ids:contains(v.id) then
-            return true
-        end
-    end
-    return false
+    return 2
 end
 
-function get.extra_song()
-    if get.item(18571,18839) then
-        return 4
-    elseif get.item(21407,18575,18576,21400,21401) then
-        return 3
-    end
-    return  2
-end
-base_songs = get.extra_song()
+base_songs = get_song_count()
 
 function get.buffs(curbuffs)
     local buffs = {}
@@ -82,7 +87,7 @@ function get.song(song)
 end
 
 function get.maxsongs(targ,buffs)
-    local maxsongs = get.extra_song()
+    local maxsongs = get_song_count()
     if buffs['clarion call'] then
         maxsongs = maxsongs + 1 
     end
