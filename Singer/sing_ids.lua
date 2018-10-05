@@ -24,61 +24,6 @@ ids.buffs = L{
     [221] = 'Dirge',
     [222] = 'Scherzo',
     }
-    
-ids.equipment = L{
-    [18571] = 'Daurdabla',      -- 99
-    [18572] = 'Gjallarhorn',    -- 99
-    [18575] = 'Daurdabla',      -- 90
-    [18576] = 'Daurdabla',      -- 95
-    [18839] = 'Daurdabla',      -- 99-2
-    [18840] = 'Gjallarhorn',    -- 99-2
-    [19000] = 'Carnwenhan',     -- 75
-    [19069] = 'Carnwenhan',     -- 80
-    [19089] = 'Carnwenhan',     -- 85   
-    [19621] = 'Carnwenhan',     -- 90
-    [19719] = 'Carnwenhan',     -- 95
-    [19828] = 'Carnwenhan',     -- 99
-    [20561] = 'Carnwenhan',     -- 119
-    [20562] = 'Carnwenhan',     -- 119-2
-    [20629] = 'Legato Dagger',
-    [20599] = 'Kali',
-    [27672] = 'Brioso Roundlet',
-    [27693] = 'Brioso Roundlet +1',
-    [23049] = 'Brioso Roundlet +2',
-    [23384] = 'Brioso Roundlet +3',
-    [28074] = 'Mdk. Shalwar +1',
-    [25865] = 'Inyanga Shalwar',
-    [25866] = 'Inyanga Shalwar +1',
-    [25882] = 'Inyanga Shalwar +2',
-    [28232] = 'Brioso Slippers',
-    [28253] = 'Brioso Slippers +1',
-    [23317] = 'Brioso Slippers +2',
-    [23652] = 'Brioso Slippers +3',
-    [11073] = 'Aoidos\' Calot +2',
-    [11093] = 'Aoidos\' Hngrln. +2',
-    [11113] = 'Ad. Mnchtte. +2',
-    [11133] = 'Aoidos\' Rhing. +2',
-    [11153] = 'Aoidos\' Cothrn. +2',
-    [11618] = 'Aoidos\' Matinee',
-    [26031] = 'Brioso Whistle',
-    [26032] = 'Moonbow Whistle',
-    [26033] = 'Mnbw. Whistle +1',
-    [21400] = 'Blurred Harp',
-    [21401] = 'Blurred Harp +1',    
-    [21407] = 'Terpander',
-    [26758] = 'Fili Calot',
-    [26759] = 'Fili Calot +1',
-    [26916] = 'Fili Hongreline',
-    [26917] = 'Fili Hongreline +1',
-    [27070] = 'Fili Manchettes',
-    [27071] = 'Fili Manchettes +1',
-    [27255] = 'Fili Rhingrave',
-    [27256] = 'Fili Rhingrave +1',
-    [27429] = 'Fili Cothurnes',
-    [27430] = 'Fili Cothurnes +1',
-    [26255] = 'Intarabus\'s Cape',
-    [21398] = 'Marsyas',
-    }
 
 ids.spells = L{
     [57] = {id=57,enl='Haste',dur=180},
@@ -135,7 +80,7 @@ ids.songs  = L{
     [414] = 'Warding Round',
     [415] = 'Goblin Gavotte',
     [416] = 'Cactuar Fugue',
-    [417] = 'Moogle Rhapsody',
+    [417] = 'Honor March',
     [418] = 'Protected Aria',
     [419] = 'Advancing March',
     [420] = 'Victory March',
@@ -191,6 +136,6 @@ ids.songs  = L{
     [470] = 'Sentinel\'s Scherzo',
     [471] = 'Foe Lullaby II',
     [472] = 'Pining Nocturne',
-}
+    }
 
 return ids

@@ -1,45 +1,84 @@
 local song_timers = {}
 
+local equip_mods = {
+    [18342] = {0.2},            -- 'Gjallarhorn',    -- 75
+    [18577] = {0.2},            -- 'Gjallarhorn',    -- 80
+    [18578] = {0.2},            -- 'Gjallarhorn',    -- 85
+    [18579] = {0.3},            -- 'Gjallarhorn',    -- 90
+    [18580] = {0.3},            -- 'Gjallarhorn',    -- 95
+    [18572] = {0.4},            -- 'Gjallarhorn',    -- 99
+    [18840] = {0.4},            -- 'Gjallarhorn',    -- 99-2
+    [18575] = {0.25},           -- 'Daurdabla',      -- 90
+    [18576] = {0.25},           -- 'Daurdabla',      -- 95
+    [18571] = {0.3},            -- 'Daurdabla',      -- 99
+    [18839] = {0.3},            -- 'Daurdabla',      -- 99-2
+    [19000] = {0.1},            -- 'Carnwenhan',     -- 75
+    [19069] = {0.2},            -- 'Carnwenhan',     -- 80
+    [19089] = {0.3},            -- 'Carnwenhan',     -- 85
+    [19621] = {0.4},            -- 'Carnwenhan',     -- 90
+    [19719] = {0.4},            -- 'Carnwenhan',     -- 95
+    [19828] = {0.5},            -- 'Carnwenhan',     -- 99
+    [19957] = {0.5},            -- 'Carnwenhan',     -- 99-2
+    [20561] = {0.5},            -- 'Carnwenhan',     -- 119
+    [20562] = {0.5},            -- 'Carnwenhan',     -- 119-2
+    [20586] = {0.5},            -- 'Carnwenhan',     -- 119-3
+    [21398] = {0.5},            -- 'Marsyas',
+    [21400] = {0.1},            -- 'Blurred Harp',
+    [21401] = {0.2,Ballad=2},   -- 'Blurred Harp +1',
+    [21405] = {0.2} ,           -- 'Eminent Flute',
+    [20629] = {0.05},           -- 'Legato Dagger',
+    [20599] = {0.05},           -- 'Kali',
+    [27672] = {Paeon=0.1},      -- 'Brioso Roundlet',
+    [27693] = {Paeon=0.1},      -- 'Brioso Roundlet +1',
+    [23049] = {Paeon=0.1},      -- 'Brioso Roundlet +2',
+    [23384] = {Paeon=0.1},      -- 'Brioso Roundlet +3',
+    [28074] = {0.1},            -- 'Mdk. Shalwar +1',
+    [25865] = {0.12},           -- 'Inyanga Shalwar',
+    [25866] = {0.15},           -- 'Inyanga Shalwar +1',
+    [25882] = {0.17},           -- 'Inyanga Shalwar +2',
+    [28232] = {0.1},            -- 'Brioso Slippers',
+    [28253] = {0.11},           -- 'Brioso Slippers +1',
+    [23317] = {0.13},           -- 'Brioso Slippers +2',
+    [23652] = {0.15},           -- 'Brioso Slippers +3',
+    [11073] = {Madrigal=0.1},   -- 'Aoidos\' Calot +2',
+    [11093] = {0.1,Minuet=0.1}, -- 'Aoidos\' Hngrln. +2',
+    [11113] = {March=0.1},      -- 'Ad. Mnchtte. +2',
+    [11133] = {Ballad=0.1},     -- 'Aoidos\' Rhing. +2',
+    [11153] = {Scherzo=0.1},    -- 'Aoidos\' Cothrn. +2',
+    [11618] = {0.1},            -- 'Aoidos\' Matinee',
+    [26031] = {0.1},            -- 'Brioso Whistle',
+    [26032] = {0.2},            -- 'Moonbow Whistle',
+    [26033] = {0.3},            -- 'Mnbw. Whistle +1',
+    [26758] = {Madrigal=0.1},   -- 'Fili Calot',
+    [26759] = {Madrigal=0.1},   -- 'Fili Calot +1',
+    [26916] = {0.11,Minuet=0.1},-- 'Fili Hongreline',
+    [26917] = {0.12,Minuet=0.1},-- 'Fili Hongreline +1',
+    [27070] = {March=0.1},      -- 'Fili Manchettes',
+    [27071] = {March=0.1},      -- 'Fili Manchettes +1',
+    [27255] = {Ballad=0.1},     -- 'Fili Rhingrave',
+    [27256] = {Ballad=0.1},     -- 'Fili Rhingrave +1',
+    [27429] = {Scherzo=0.1},    -- 'Fili Cothurnes',
+    [27430] = {Scherzo=0.1},    -- 'Fili Cothurnes +1',
+    [26255] = {Madrigal=0.1,Prelude=0.1}, -- 'Intarabus\'s Cape',
+    }
+
+local slots = {'main','sub','range','head','neck','body','hands','legs','feet','back'}
+
 function song_timers.duration(name,buffs)
     local mult = 1
-    if get.equip('range') == 'Marsyas' then mult = mult + 0.5 end
-    if get.equip('range') == 'Daurdabla' then mult = mult + 0.3 end    -- 0.25 for 90, 0.3 for 99
-    if get.equip('range') == 'Gjallarhorn' then mult = mult + 0.4 end  -- 0.3 for 95, 0.4 for 99
-    if get.equip('main') == 'Carnwenhan' then mult = mult + 0.5 end    -- 0.1 for 75, 0.4 for 95, 0.5 for 99/119
-    if get.equip('main') == 'Legato Dagger' then mult = mult + 0.05 end
-    if get.equip('sub') == 'Legato Dagger' then mult = mult + 0.05 end
-    if get.equip('main') == 'Kali' then mult = mult + 0.05 end
-    if get.equip('sub') == 'Kali' then mult = mult + 0.05 end
-    if get.equip('neck') == 'Aoidos\' Matinee' then mult = mult + 0.1 end
-    if get.equip('neck') == 'Brioso Whistle' then mult = mult + 0.1 end
-    if get.equip('neck') == 'Moonbow Whistle' then mult = mult + 0.2 end
-    if get.equip('neck') == 'Mnbw. Whistle +1' then mult = mult + 0.3 end
-    if get.equip('body') == 'Aoidos\' Hngrln. +2' then mult = mult + 0.1 end
-    if get.equip('body') == 'Fili Hongreline' then mult = mult + 0.11 end
-    if get.equip('body') == 'Fili Hongreline +1' then mult = mult + 0.12 end
-    if get.equip('legs') == 'Mdk. Shalwar +1' then mult = mult + 0.1 end
-    if get.equip('legs') == 'Inyanga Shalwar' then mult = mult + 0.12 end
-    if get.equip('legs') == 'Inyanga Shalwar +1' then mult = mult + 0.15 end
-    if get.equip('legs') == 'Inyanga Shalwar +2' then mult = mult + 0.17 end
-    if get.equip('feet') == 'Brioso Slippers' then mult = mult + 0.1 end
-    if get.equip('feet') == 'Brioso Slippers +1' then mult = mult + 0.11 end
-    if get.equip('feet') == 'Brioso Slippers +2' then mult = mult + 0.13 end
-    if get.equip('feet') == 'Brioso Slippers +3' then mult = mult + 0.15 end
-    if string.find(name,'March') and (get.equip('hands') == 'Ad. Mnchtte. +2' or string.find(get.equip('hands'),'Fili Manchettes')) then mult = mult + 0.1 end
-    if string.find(name,'Minuet') and (get.equip('body') == 'Aoidos\' Hngrln. +2' or string.find(get.equip('body'),'Fili Hongreline')) then mult = mult + 0.1 end
-    if string.find(name,'Madrigal') and (get.equip('head') == 'Aoidos\' Calot +2' or string.find(get.equip('head'),'Fili Calot')) then mult = mult + 0.1 end
-    if (string.find(name,'Madrigal') or string.find(name,'Prelude')) and get.equip('back') == 'Intarabus\'s Cape' then mult = mult + 0.1 end
-    if string.find(name,'Ballad') and (get.equip('legs') == 'Aoidos\' Rhing. +2' or string.find(get.equip('legs'),'Fili Rhingrave')) then mult = mult + 0.1 end
-    if string.find(name,'Scherzo') and (get.equip('feet') == 'Aoidos\' Cothrn. +2' or string.find(get.equip('feet'),'Fili Cothurnes')) then mult = mult + 0.1 end
-    if string.find(name,'Paeon') and string.find(get.equip('head'),'Brioso Roundlet') then mult = mult + 0.1 end
-    if buffs.troubadour then
-        mult = mult*2
+    local item = windower.ffxi.get_items('equipment')
+    for _,slot in ipairs(slots) do
+        local mod = equip_mods[windower.ffxi.get_items(item[slot..'_bag'],item[slot]).id]
+        if mod then
+            for k,v in pairs(mod) do
+                if k == 1 or string.find(name, k) then
+                    mult = mult + v
+                end
+            end
+        end
     end
-    if string.find(name,'Scherzo') and buffs['soul voice'] then
-        mult = mult*2
-    elseif string.find(name,'Scherzo') and buffs.marcato then
-        mult = mult*1.5
-    end
+    if buffs.troubadour then mult = mult*2 end
+    if string.find(name,'Scherzo') then mult = buffs['soul voice'] and mult*2 or buffs.marcato and mult*1.5 or mult end
     return math.floor(mult*120)
 end
 

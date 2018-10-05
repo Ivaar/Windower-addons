@@ -1,4 +1,5 @@
 local get = {}
+
 get.songs = {
     paeon = {'Army\'s Paeon VI','Army\'s Paeon V','Army\'s Paeon IV','Army\'s Paeon III','Army\'s Paeon II','Army\'s Paeon'},
     ballad = {'Mage\'s Ballad III','Mage\'s Ballad II','Mage\'s Ballad'},
@@ -31,20 +32,23 @@ local equippable_bags = {
     }
 
 local extra_song_harp = {
-    [21407] = 3,
-    [18575] = 3,
-    [18576] = 3,
-    [21400] = 3,
-    [21401] = 3,
-    [18571] = 4,
-    [18839] = 4,
-}
+    [18571] = 4, -- Daurdabla 99
+    [18575] = 3, -- Daurdabla 90
+    [18576] = 3, -- Daurdabla 95
+    [18839] = 4, -- Daurdabla 99-2
+    [21400] = 3, -- Blurred Harp
+    [21401] = 3, -- Blurred Harp +1
+    [21407] = 3, -- Terpander
+    }
 
 local function get_song_count()
     for _, bag in ipairs(equippable_bags) do
-        for i,v in ipairs(windower.ffxi.get_items(bag)) do
-            if extra_song_harp[v.id] then
-                return extra_song_harp[v.id]
+        local items = windower.ffxi.get_items(bag)
+        if items.enabled then
+            for i,v in ipairs(items) do
+                if extra_song_harp[v.id] then
+                    return extra_song_harp[v.id]
+                end
             end
         end
     end
@@ -63,23 +67,20 @@ function get.buffs(curbuffs)
     return buffs
 end
 
-function get.equip(slot)
-    local item = windower.ffxi.get_items().equipment
-    return ids.equipment[windower.ffxi.get_items(item[slot..'_bag'],item[slot]).id] or ''
-end
-
-function get.spell(spell)
+function get.spell(name)
+    name = string.lower(name)
     for k,v in pairs(ids.spells) do
-        if v and v.enl and string.lower(v.enl) == string.lower(spell) then
+        if v and v.enl and string.lower(v.enl) == name then
             return v
         end
     end
     return nil
 end
 
-function get.song(song)
-    for k,v in pairs(ids.songs) do 
-        if k ~= n and string.lower(v) == string.lower(song) then
+function get.song(name)
+    name = string.lower(name)
+    for k,v in pairs(ids.songs) do
+        if k ~= 'n' and string.lower(v) == name then
             return {id=k,enl=v}
         end
     end
@@ -91,7 +92,7 @@ function get.maxsongs(targ,buffs)
     if buffs['clarion call'] then
         maxsongs = maxsongs + 1 
     end
-    if timers[targ] and maxsongs < table.length(timers[targ]) then--
+    if timers[targ] and maxsongs < table.length(timers[targ]) then
         maxsongs = table.length(timers[targ])
     end
     return maxsongs
@@ -109,24 +110,6 @@ function get.song_list(songs,targ,maxsongs)
     return list
 end
 
-function get.coords()
-    local play = windower.ffxi.get_mob_by_target('me')
-    if play then
-        return {play.x,play.z,play.y}
-    else
-        return {0,0,0}
-    end 
-end
-
-function get.moving()
-    local coords = get.coords()
-    local clock = os.clock()
-    lastcoords = lastcoords and lastcoords or coords
-    for x=1,3 do if lastcoords[x] ~= coords[x] then lastcoords=coords ts=clock return true end end
-    if ts and ts+1>clock then return true end
-    return false
-end
-
 function get.eye_sight(player,target)
     if not target then return false end
     local xdif = target.x - player.x -- Negative if target is west
@@ -139,14 +122,10 @@ function get.eye_sight(player,target)
 end
 
 function get.valid_target(targ,dst)
-    windower.ffxi.get_mob_by_name(targ)
     for ind,member in pairs(windower.ffxi.get_party()) do
-        if type(member) == 'table' and member.mob and 
-        member.mob.in_party and member.mob.hpp > 0 and 
-        member.mob.name:lower() == targ:lower() and 
-        math.sqrt(member.mob.distance) < dst and 
-        not member.mob.charmed then
-           return true
+        if type(member) == 'table' and member.mob and member.mob.in_party and member.mob.hpp > 0 and 
+            member.mob.name:lower() == targ:lower() and math.sqrt(member.mob.distance) < dst and not member.mob.charmed then
+            return true
         end
     end
     return false
@@ -155,9 +134,9 @@ end
 function get.aoe_range()
     for ind,member in pairs(windower.ffxi.get_party()) do
         if type(member) == 'table' and member.mob and member.mob.in_party and member.mob.hpp > 0 and
-        not settings.song[member.mob.name:lower()] and not settings.ignore:find(member.mob.name:lower()) and
-        math.sqrt(member.mob.distance) >= 10 and not member.mob.charmed then
-           return false
+            not settings.song[member.mob.name:lower()] and not settings.ignore:find(member.mob.name:lower()) and
+            math.sqrt(member.mob.distance) >= 10 and not member.mob.charmed then
+            return false
         end
     end
     return true

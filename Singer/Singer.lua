@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.18.10.04'
+_addon.version = '1.18.10.05'
 
 require('luau')
 require('pack')
@@ -28,6 +28,7 @@ default = {
     ignore=L{},
     song={},
     songs={march=2},
+    use_ws=true,
     min_ws=20,
     max_ws=99,
     box={text={size=10}}
@@ -35,9 +36,11 @@ default = {
 
 settings = config.load(default)
 
-nexttime = os.clock()
 del = 0
+counter = 0
+interval = 0.2
 timers = {AoE={},buffs={Haste={},Refresh={}}}
+last_coords = 'fff':pack(0,0,0)
 
 local display_box = function()
     local str
@@ -73,38 +76,40 @@ local display_box = function()
     for k,v in pairs(settings.recast) do
         str = str..'\n Recast %s:[%d-%d]':format(k:ucfirst(),v.min,v.max)
     end
-    str = str..'\n Delay:[%d] \n WS:[ > %d%%][ < %d%%]':format(settings.delay,settings.min_ws,settings.max_ws)
+    str = str..'\n Delay:[%d]':format(settings.delay)
+    if settings.use_ws then
+        str = str..'WS:[ > %d%%][ < %d%%]':format(settings.min_ws,settings.max_ws)
+    end
     return str
 end
 
 bard_status = texts.new(display_box(),settings.box,settings)
 bard_status:show()
 
-windower.register_event('prerender',function ()
+function do_stuff()
     if not settings.actions then return end
-    local curtime = os.clock()
-    if nexttime + del <= curtime then
-        nexttime = curtime
-        del = 0.1
+    counter = counter + interval
+    if counter > del then
+        counter = 0
+        del = interval
         for k,v in pairs(timers) do song_timers.update(k) end
         local play = windower.ffxi.get_player()
         if not play or play.main_job ~= 'BRD' or (play.status ~= 1 and play.status ~= 0) then return end
         local JA_WS_lock,AM_start,goal_tp
-        local moving = get.moving()
         local buffs = get.buffs(play.buffs)
         local spell_recasts = windower.ffxi.get_spell_recasts()
         local ability_recasts = windower.ffxi.get_ability_recasts()
         local recast = math.random(settings.recast.song.min,settings.recast.song.max)+math.random()
-        if moving or casting or buffs.stun or buffs.sleep or buffs.charm or buffs.terror or buffs.petrification then return end
+        if is_moving or casting or buffs.stun or buffs.sleep or buffs.charm or buffs.terror or buffs.petrification then return end
         if buffs.amnesia or buffs.impairment then JA_WS_lock = true end
-        if not JA_WS_lock and play.status == 1 and equip('main') == 'Carnwenhan' then
+        if use_ws and not JA_WS_lock and play.status == 1 and equip('main') == 'Carnwenhan' then
             local targ = windower.ffxi.get_mob_by_target('t')
-            if not AM_start and buffs['aftermath: lv.3'] then AM_start = curtime end
-            if buffs['aftermath: lv.3'] and AM_start and curtime - AM_start <= 140 then goal_tp = 1000 else goal_tp = 3000 end
+            if not AM_start and buffs['aftermath: lv.3'] then AM_start = os.clock() end
+            if buffs['aftermath: lv.3'] and AM_start and os.clock() - AM_start <= 140 then goal_tp = 1000 else goal_tp = 3000 end
             if (get.eye_sight(windower.ffxi.get_mob_by_target('me'),targ) and play.vitals.tp >= goal_tp and 
             targ and targ.valid_target and targ.is_npc and targ.hpp < settings.max_ws and targ.hpp > settings.min_ws and  
             math.sqrt(targ.distance) <= 4) and ((goal_tp == 3000 and not buffs['aftermath: lv.3']) or goal_tp == 1000) then
-                if goal_tp == 3000 then AM_start = curtime end
+                if goal_tp == 3000 then AM_start = os.clock() end
                 windower.send_command('input /ws "Mordant Rime" <t>')
                 del = 4.2
                 return
@@ -138,16 +143,15 @@ windower.register_event('prerender',function ()
             end
         end
     end
-end)
+end
+
+do_stuff:loop(interval)
 
 windower.register_event('incoming chunk', function(id,original,modified,injected,blocked)
     if id == 0x028 then
         local packet = packets.parse('incoming', original)
-        local play = windower.ffxi.get_player()
-        if not play then return end
-        local targ = windower.ffxi.get_mob_by_id(packet['Target 1 ID']).name
-        local actor = windower.ffxi.get_mob_by_id(packet['Actor']).name
-        if packet['Category'] == 8 and actor == play.name then
+        if packet['Actor'] ~= windower.ffxi.get_mob_by_target('me').id then return false end
+        if packet['Category'] == 8 then
             if (packet['Param'] == 24931) then
             -- Begin Casting
                 casting = true
@@ -156,40 +160,46 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
                 casting = false
                 del = 2.5
             end
-        elseif packet['Category'] == 4 and actor == play.name then
+        elseif packet['Category'] == 4 then
             -- Finish Casting
             casting = false
             del = settings.delay
             local spell = ids.spells[packet['Param']]
-            if spell then timers.buffs[spell.enl][targ:lower()] = os.time()+spell.dur return end
-            if not ids.songs[packet['Param']] then return end
-            local buffs = get.buffs(play.buffs)
-            local spell_name = ids.songs[packet['Param']]
-            if packet['Target Count'] > 1 or targ == play.name and get.aoe_range() then
-                song_timers.adjust(spell_name,'AoE',buffs)
+            if spell then
+                timers.buffs[spell.enl][windower.ffxi.get_mob_by_id(packet['Target 1 ID']).name:lower()] = os.time()+spell.dur
+            elseif ids.songs[packet['Param']] then
+                local buffs = get.buffs(windower.ffxi.get_player().buffs)
+                local spell_name = ids.songs[packet['Param']]
+                if packet['Target Count'] > 1 or packet['Target 1 ID'] == packet['Actor'] and get.aoe_range() then
+                    song_timers.adjust(spell_name,'AoE',buffs)
+                end
+                for x = 1,packet['Target Count'] do
+                    local targ_name = windower.ffxi.get_mob_by_id(packet['Target '..x..' ID']).name
+                    song_timers.adjust(spell_name,targ_name,buffs)
+                end
             end
-            for x = 1,packet['Target Count'] do
-                local targ_name = windower.ffxi.get_mob_by_id(packet['Target '..x..' ID']).name
-                song_timers.adjust(spell_name,targ_name,buffs)
-            end
-        elseif L{3,5}:contains(packet['Category']) and actor == play.name then
+        elseif L{3,5}:contains(packet['Category']) then
             casting = false
-        elseif L{7,9}:contains(packet['Category']) and actor == play.name then
+        elseif L{7,9}:contains(packet['Category']) then
             casting = true
         end
     elseif id == 0x029 then
         local packet = packets.parse('incoming', original)
         --table.vprint(packet)
-        local play = windower.ffxi.get_player().name
-        local targ = windower.ffxi.get_mob_by_id(packet['Target']).name
-        local actor = windower.ffxi.get_mob_by_id(packet['Actor']).name
-        if (packet.Message) == 206 and actor == play then
+        if (packet.Message) == 206 and packet['Actor'] == windower.ffxi.get_mob_by_target('me').id then
             local buff = ids.buffs[packet['Param 1']]
-            --print(targ_name,res.buffs[packet['Param 1']].en)
-            if buff and not settings.ignore:contains(targ:lower()) then 
+            local targ = windower.ffxi.get_mob_by_id(packet['Target']).name
+            if buff and not settings.ignore:contains(targ:lower()) then
                 song_timers.buff_lost(targ,buff) 
             end
         end
+    end
+end)
+
+windower.register_event('outgoing chunk', function(id,data,modified,is_injected,is_blocked)
+    if id == 0x015 then
+        is_moving = last_coords ~= modified:sub(5, 16)
+        last_coords = modified:sub(5, 16)
     end
 end)
 
@@ -238,11 +248,17 @@ windower.register_event('addon command', function(...)
                 settings.clarion.aoe = commands[2]
                 addon_message('Clarion AoE song set to %s':format(commands[2]))
             end
-        elseif commands[1] == 'ws' and commands[3] and tonumber(commands[3]) then
-            if commands[2] == '<' then
-                settings.max_ws = tonumber(commands[3])
-            elseif commands[2] == '>' then
-                settings.min_ws = tonumber(commands[3])
+        elseif commands[1] == 'ws' and commands[3] then
+            if commands[3] == 'on' then
+                settings.use_ws = true
+            elseif commands[3] == 'off' then
+                settings.use_ws = false
+            elseif tonumber(commands[3]) then
+                if commands[2] == '<' then
+                    settings.max_ws = tonumber(commands[3])
+                elseif commands[2] == '>' then
+                    settings.min_ws = tonumber(commands[3])
+                end
             end
        elseif commands[1]:startswith('dummy') then
             local ind = tonumber(commands[1]:sub(6)) or 1
