@@ -21,6 +21,8 @@ default = {
     clarion={aoe='minuet'},
     actions=false,
     pianissimo=false,
+    nightingale=true,
+    troubadour=true,
     recast={song={min=20,max=25},buff={min=5,max=10}},
     active=true,
     timers=true,
