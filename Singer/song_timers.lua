@@ -102,9 +102,20 @@ function song_timers.duration(name,buffs)
             end
         end
     end
+    local dur = 0
+    if get.jp_mods.mult then mult = mult + 0.05 end
+    if buffs['clarion call'] then dur = dur + get.jp_mods.clarion end
+    if buffs.tenuto then dur = dur + get.jp_mods.tenuto end
     if buffs.troubadour then mult = mult*2 end
-    if string.find(name,'Scherzo') then mult = buffs['soul voice'] and mult*2 or buffs.marcato and mult*1.5 or mult end
-    return math.floor(mult*120)
+    if string.find(name,'Scherzo') then 
+        if buffs['soul voice'] then
+            mult = mult*2 
+        elseif buffs.marcato then
+            mult = mult*1.5
+            dur = dur + get.jp_mods.marcato
+        end
+    end
+    return math.floor(mult*120+dur)
 end
 
 function song_timers.buff_lost(targ_id,buff_id)
