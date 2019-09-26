@@ -1,5 +1,6 @@
 # Sing
 ### Automates casting of bard buff songs.
+#### If you are updating from a version prior to 1.15.06.24 make sure you delete your existing settings.xml file located within the addons data folder.
 Configure songs with commands, calculates song duration based on active job abilities and gear equipped 
 at the endcast, supports two dummy songs, checks active song buffs casted by player (as recorded by the addon) and detects song+ 
 instruments, (if found in inventory/wardrobe.) and applies it to your song limit.

@@ -1,5 +1,30 @@
 local song_timers = {}
 
+local song_buffs = {
+    [195] = 'paeon',
+    [196] = 'ballad',
+    [197] = 'minne',
+    [198] = 'minuet',
+    [199] = 'madrigal',
+    [200] = 'prelude',
+    [201] = 'mambo',
+    [202] = 'aubade',
+    [203] = 'pastoral',
+    [205] = 'fantasia',
+    [206] = 'operetta',
+    [207] = 'capriccio',
+    [209] = 'round',
+    [210] = 'gavotte',
+    [214] = 'march',
+    [215] = 'etude',
+    [216] = 'carol',
+    [218] = 'hymnus',
+    [219] = 'mazurka',
+    [220] = 'sirvente',
+    [221] = 'dirge',
+    [222] = 'scherzo',
+    }
+
 local equip_mods = {
     [18342] = {0.2},            -- 'Gjallarhorn',    -- 75
     [18577] = {0.2},            -- 'Gjallarhorn',    -- 80
@@ -82,9 +107,11 @@ function song_timers.duration(name,buffs)
     return math.floor(mult*120)
 end
 
-function song_timers.buff_lost(targ,buff)
-    local buff = get.songs[buff:lower()]
+function song_timers.buff_lost(targ_id,buff_id)
+    local buff = get.songs[song_buffs[buff_id]]
     if not buff or not timers[targ] then return end
+    local targ = windower.ffxi.get_mob_by_id(targ_id).name
+    if settings.ignore:contains(targ:lower()) then return end
     local minimum,song
     for k,song_name in pairs(buff) do
         local song_timer = timers[targ][song_name]
@@ -132,23 +159,19 @@ function song_timers.adjust(spell_name,targ,buffs)
         if timers[targ][spell_name].ts < (current_time + dur) then
             song_timers.create(spell_name,targ,dur,current_time,buffs)
         end
+    elseif table.length(timers[targ]) < get.maxsongs(targ,buffs) then
+        song_timers.create(spell_name,targ,dur,current_time,buffs)
     else
-        if table.length(timers[targ]) < get.maxsongs(targ,buffs) then
+        local rep,repsong
+        for song_name,expires in pairs(timers[targ]) do
+            if current_time + dur > expires.ts and (not rep or rep > expires.ts) then
+                rep = expires.ts
+                repsong = song_name
+            end
+        end
+        if repsong then
+            song_timers.delete(repsong,targ)
             song_timers.create(spell_name,targ,dur,current_time,buffs)
-        else
-            local rep,repsong
-            for song_name,expires in pairs(timers[targ]) do
-                if current_time + dur > expires.ts then
-                    if not rep or rep > expires.ts then
-                        rep = expires.ts
-                        repsong = song_name
-                    end
-                end
-            end
-            if repsong then
-                song_timers.delete(repsong,targ)
-                song_timers.create(spell_name,targ,dur,current_time,buffs)
-            end
         end
     end
 end

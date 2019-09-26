@@ -15,7 +15,7 @@ htmb_map = {
      [2] = {name = 'Celestial Nexus phantom gem',  cost = 10},
      [3] = {name = 'Phantom gem of apathy',        cost = 15},
      [4] = {name = 'Phantom gem of arrogance',     cost = 15},
-     [5] = {name = 'Phantom gem of evny',          cost = 15},
+     [5] = {name = 'Phantom gem of envy',          cost = 15},
      [6] = {name = 'Phantom gem of cowardice',     cost = 15},
      [7] = {name = 'Phantom gem of rage',          cost = 15},
      [8] = {name = 'P. Perpetrator phantom gem',   cost = 20},
@@ -31,6 +31,10 @@ htmb_map = {
     [17] = {name = 'Waking Dream phantom gem',     cost = 10},
     [18] = {name = 'Feared One phantom gem',       cost = 10},
     [19] = {name = 'Dawn phantom gem',             cost = 10},
+    [20] = {name = 'Stygian Pact phantom gem',     cost = 10},
+    [21] = {name = 'Champion phantom gem',         cost = 10},
+    [22] = {name = 'Divine phantom gem',           cost = 10},
+    [23] = {name = 'Maiden phantom gem',           cost = 10},
 }
 
 htmb_npcs = {

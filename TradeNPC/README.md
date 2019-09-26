@@ -4,7 +4,7 @@ Trade an npc up to 8 stacks of items and gil with a single command.
 
 ### Command Usage:
 ```
-tradenpc <quantity> <item name>
+tradenpc <quantity> <item name> [npc name]
 ```
 
 Quantities greater than an items stack size are accepted, if you specify too many items the trade will not occur.
@@ -28,5 +28,5 @@ If you need to exceed the chatlog character limit, you can type the command from
 
 //tradenpc 792 alexandrite
 
-//tradenpc 10,000 gil 24 "fire crystal" 12 "earth crystal" 18 "water crystal" 6 "dark crystal"
+//tradenpc 10,000 gil 24 "fire crystal" 12 "earth crystal" 18 "water crystal" 6 "dark crystal" "Ephemeral Moogle"
 ```
