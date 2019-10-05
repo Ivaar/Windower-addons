@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.19.09.26'
+_addon.version = '1.19.10.05'
 
 require('luau')
 require('pack')
@@ -39,7 +39,7 @@ settings = config.load(default)
 
 del = 0
 counter = 0
-interval = 0.2
+interval = 0.1
 timers = {AoE={},buffs={Haste={},Refresh={}}}
 last_coords = 'fff':pack(0,0,0)
 buffs = get.buffs()
@@ -91,7 +91,7 @@ bard_status:show()
 function do_stuff()
     if not settings.actions then return end
     counter = counter + interval
-    if counter > del then
+    if counter >= del then
         counter = 0
         del = interval
         for k,v in pairs(timers) do song_timers.update(k) end
@@ -105,18 +105,21 @@ function do_stuff()
         if buffs.amnesia or buffs.impairment then JA_WS_lock = true end
         if use_ws and not JA_WS_lock and play.status == 1 then
             local targ = windower.ffxi.get_mob_by_target('t')
-            if not AM_start and buffs['aftermath: lv.3'] then AM_start = os.clock() end
-            if buffs['aftermath: lv.3'] and AM_start and os.clock() - AM_start <= 140 then goal_tp = 1000 else goal_tp = 3000 end
+            if (not buffs['aftermath: lv.3'] or buffs['aftermath: lv.3'] <= 5)then
+                goal_tp = 3000
+            else
+                goal_tp = 1000
+            end
             if (get.eye_sight(windower.ffxi.get_mob_by_target('me'),targ) and play.vitals.tp >= goal_tp and 
                 targ and targ.valid_target and targ.is_npc and targ.hpp < settings.max_ws and targ.hpp > settings.min_ws and  
-                math.sqrt(targ.distance) <= 4) and ((goal_tp == 3000 and not buffs['aftermath: lv.3']) or goal_tp == 1000) then
-                if goal_tp == 3000 then AM_start = os.clock() end
-                    windower.send_command('input /ws "Mordant Rime" <t>')
-                    del = 4.2
+                math.sqrt(targ.distance) <= 4) and (goal_tp == 1000 or not buffs['aftermath: lv.3']) then
+
+                windower.send_command('input /ws "Mordant Rime" <t>')
+                del = 4.2
                 return
             end
         end
-        if buffs.silence or buffs.mute or buffs.omerta then return end     
+        if buffs.silence or buffs.mute or buffs.omerta then return end
         if get.aoe_range() then
             local song = cast.check_song(settings.songs,'AoE',buffs,spell_recasts,recast) 
             if song then cast.song(song,'<me>',buffs,ability_recasts,JA_WS_lock) return end
@@ -217,13 +220,17 @@ windower.register_event('addon command', function(...)
     local commands = {...}
     for x=1,#commands do commands[x] = windower.convert_auto_trans(commands[x]):lower() end
     if not commands[1] or S{'on','off'}:contains(commands[1]) then
-        initialize()
         if not commands[1] then
             settings.actions = not settings.actions
         elseif commands[1] == 'on' then
             settings.actions = true
         elseif commands[1] == 'off' then
             settings.actions = false
+        end
+        if settings.actions then
+            del = 0
+            initialize()
+            do_stuff()
         end
         addon_message('Actions %s':format(settings.actions and 'On' or 'Off'))
     elseif commands[1] == 'save' then
