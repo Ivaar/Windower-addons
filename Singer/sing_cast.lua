@@ -30,15 +30,15 @@ function cast.check_song(songs,targ,buffs,spell_recasts,recast)
     local maxsongs = get.maxsongs(targ,buffs)
     local song_list = get.song_list(songs,targ,maxsongs)
     for k,song in ipairs(settings.dummy) do
-        if base_songs >= k+2 and timers[targ] and table.length(timers[targ]) == maxsongs-k and spell_recasts[get.song_by_name(song).id] <= 0 then
+        if get.base_songs >= k+2 and timers[targ] and table.length(timers[targ]) == maxsongs-k and spell_recasts[get.song_by_name(song).id] <= 0 then
             return song
         end
     end
-    for buff,num in pairs(song_list) do
-        for x = 1,num do
+    for buff, num in pairs(song_list) do
+        for x = 1, num do
             local song = get.song_by_name(get.songs[buff][x])
             if song and spell_recasts[song.id] <= 0 and
-            (not timers[targ] or not timers[targ][song.enl] or os.time()-timers[targ][song.enl].ts+recast>0 or 
+            (not timers[targ] or not timers[targ][song.enl] or os.time()-timers[targ][song.enl].ts+recast > 0 or 
             (buffs.troubadour and not timers[targ][song.enl].nt) or 
             (buffs['soul voice'] and not timers[targ][song.enl].sv)) then
                 return song.enl

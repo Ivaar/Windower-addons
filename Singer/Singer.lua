@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.19.10.05'
+_addon.version = '1.19.10.09'
 
 require('luau')
 require('pack')
@@ -78,7 +78,7 @@ local display_box = function()
     for k,v in pairs(settings.recast) do
         str = str..'\n Recast %s:[%d-%d]':format(k:ucfirst(),v.min,v.max)
     end
-    str = str..'\n Delay:[%d]':format(settings.delay)
+    str = str..'\n Delay:[%s]':format(settings.delay)
     if settings.use_ws then
         str = str..'\n WS:[ > %d%%][ < %d%%]':format(settings.min_ws,settings.max_ws)
     end
@@ -97,7 +97,7 @@ function do_stuff()
         for k,v in pairs(timers) do song_timers.update(k) end
         local play = windower.ffxi.get_player()
         if not play or play.main_job ~= 'BRD' or (play.status ~= 1 and play.status ~= 0) then return end
-        local JA_WS_lock,AM_start,goal_tp
+        local JA_WS_lock,goal_tp
         local spell_recasts = windower.ffxi.get_spell_recasts()
         local ability_recasts = windower.ffxi.get_ability_recasts()
         local recast = math.random(settings.recast.song.min,settings.recast.song.max)+math.random()
@@ -105,7 +105,7 @@ function do_stuff()
         if buffs.amnesia or buffs.impairment then JA_WS_lock = true end
         if use_ws and not JA_WS_lock and play.status == 1 then
             local targ = windower.ffxi.get_mob_by_target('t')
-            if (not buffs['aftermath: lv.3'] or buffs['aftermath: lv.3'] <= 5)then
+            if not buffs['aftermath: lv.3'] or buffs['aftermath: lv.3'] <= 5 then
                 goal_tp = 3000
             else
                 goal_tp = 1000
@@ -195,16 +195,24 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
     elseif id == 0x63 and original:byte(5) == 9 then
         local set_buff = {}
         for n=1,32 do
-            local buff = original:unpack('H', n*2+7)
-            if buff == 255 then break end
-            buff = res.buffs[buff].en:lower()
-            set_buff[buff] = (set_buff[buff] or 0) + 1
+            local buff_id = original:unpack('H', n*2+7)
+            local buff_ts = original:unpack('I', n*4+69)
+            if buff_ts == 0 then
+                break
+            elseif buff_id ~= 255 then
+                local buff_en = res.buffs[buff_id].en:lower()
+                if buff_id == 272 then
+                    set_buff[buff_en] = math.floor(buff_ts/60+1510890320)
+                else
+                    set_buff[buff_en] = (set_buff[buff_en] or 0) + 1
+                end
+            end
         end
         buffs = set_buff
     end
 end)
 
-windower.register_event('outgoing chunk', function(id,data,modified,is_injected,is_blocked)
+windower.register_event('outgoing chunk', function(id,original,modified,is_injected,is_blocked)
     if id == 0x015 then
         local coords = modified:sub(0x04+1, 0x0F+1)
         is_moving = last_coords ~= coords
@@ -330,7 +338,7 @@ windower.register_event('addon command', function(...)
         end
    elseif type(settings[commands[1]]) == 'number' and commands[2] and tonumber(commands[2]) then
         settings[commands[1]] = tonumber(commands[2])
-        addon_message('%s is now set to %d':format(commands[1],settings[commands[1]]))
+        addon_message('%s is now set to %s':format(commands[1],settings[commands[1]]))
     elseif type(settings[commands[1]]) == 'boolean' then
         if commands[1] == 'actions' then
             initialize()

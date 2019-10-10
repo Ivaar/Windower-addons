@@ -49,7 +49,7 @@ local equip_mods = {
     [20586] = {0.5},            -- 'Carnwenhan',     -- 119-3
     [21398] = {0.5},            -- 'Marsyas',
     [21400] = {0.1},            -- 'Blurred Harp',
-    [21401] = {0.2,Ballad=2},   -- 'Blurred Harp +1',
+    [21401] = {0.2,Ballad=0.2}, -- 'Blurred Harp +1',
     [21405] = {0.2} ,           -- 'Eminent Flute',
     [20629] = {0.05},           -- 'Legato Dagger',
     [20599] = {0.05},           -- 'Kali',

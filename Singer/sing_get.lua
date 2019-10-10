@@ -188,22 +188,33 @@ function initialize()
     get.jp_mods.tenuto = jp.tenuto_effect *2
     get.jp_mods.marcato = jp.marcato_effect
     get.jp_mods.mult = jp.jp_spent >= 1200
-
-    base_songs = find_equippable_item(extra_song_harp) or 2
-    if find_equippable_item(honor_march_horn) and #get.songs.march == 2 then
-        table.insert(get.songs.march, 1, 'Honor March')
+    get.base_songs = 2
+    for _, bag in ipairs(equippable_bags) do
+        local items = windower.ffxi.get_items(bag)
+        if items.enabled then
+            for i,v in ipairs(items) do
+                if extra_song_harp[v.id] and get.base_songs < extra_song_harp[v.id] then
+                    get.base_songs = extra_song_harp[v.id]
+                elseif honor_march_horn[v.id] and #get.songs.march == 2 then
+                    table.insert(get.songs.march, 1, 'Honor March')
+                end
+            end
+        end
     end
 end
 initialize()
 
 function get.buffs()
-    local buffs = {}
-    for i,v in pairs(windower.ffxi.get_player().buffs) do
-        if res.buffs[v] and res.buffs[v].english then
-            buffs[res.buffs[v].english:lower()] = (buffs[res.buffs[v].english:lower()] or 0) + 1
+    local set_buff = {}
+    for _, buff_id in ipairs(windower.ffxi.get_player().buffs) do
+        local buff_en = res.buffs[buff_id].en:lower()
+        if buff_id == 272 then
+            set_buff[buff_en] = 10
+        else
+            set_buff[buff_en] = (set_buff[buff_en] or 0) + 1
         end
     end
-    return buffs
+    return set_buff
 end
 
 function get.spell_by_id(id)
@@ -235,11 +246,10 @@ function get.song_by_name(name)
 end
 
 function get.maxsongs(targ,buffs)
-    local maxsongs = base_songs
+    local maxsongs = get.base_songs
     if buffs['clarion call'] then
         maxsongs = maxsongs + 1 
-    end
-    if timers[targ] and maxsongs < table.length(timers[targ]) then
+    elseif timers[targ] and maxsongs < table.length(timers[targ]) then
         maxsongs = table.length(timers[targ])
     end
     return maxsongs
@@ -251,7 +261,7 @@ function get.song_list(songs,targ,maxsongs)
     for k,v in pairs(songs) do
         list[k] = v
     end
-    if clarion and maxsongs > base_songs then
+    if clarion and maxsongs > get.base_songs then
         list[clarion] = (list[clarion] or 0) + 1 
     end
     return list
