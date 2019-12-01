@@ -1,5 +1,5 @@
 _addon.command = 'SellNPC'
-_addon.version = '2.0.0.0'
+_addon.version = '2.0.0.1'
 _addon.author = 'Ivaar'
 _addon.name = 'SellNPC'
 
@@ -11,7 +11,7 @@ sales_que = {}
 
 function get_item_res(item)
     for k,v in pairs(res_items) do
-        if v.en:lower() == item or v.enl:lower() == item then
+        if (v.en:lower() == item or v.enl:lower() == item) and item.flags['No NPC Sale'] then
             return v
         end
     end
@@ -23,8 +23,6 @@ function check_item(name, silent)
     local item = get_item_res(name)
     if not item then
         windower.add_to_chat(207, '%s: "%s" not a valid item name.':format(_addon.name, name))
-    elseif item.flags['No NPC Sale'] then
-        windower.add_to_chat(207, '%s: Cannot sell "%s" to npc vendors.':format(_addon.name, item.en))
     else
         sales_que[item.id] = true
         if silent then return end
