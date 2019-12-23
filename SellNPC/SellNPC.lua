@@ -1,5 +1,5 @@
 _addon.command = 'SellNPC'
-_addon.version = '2.0.0.2'
+_addon.version = '2.0.0.3'
 _addon.author = 'Ivaar'
 _addon.name = 'SellNPC'
 
@@ -11,7 +11,7 @@ sales_que = {}
 
 function get_item_res(item)
     for k,v in pairs(res_items) do
-        if (v.en:lower() == item or v.enl:lower() == item) and not item.flags['No NPC Sale'] then
+        if (v.en:lower() == item or v.enl:lower() == item) and not v.flags['No NPC Sale'] then
             return v
         end
     end
