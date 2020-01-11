@@ -1,6 +1,6 @@
 _addon.name = 'PorterPacker'
 _addon.author = 'Ivaar'
-_addon.version = '0.0.0.4'
+_addon.version = '0.0.0.5'
 _addon.commands = {'porterpacker','packer','po'}
 
 require('pack')
@@ -180,7 +180,6 @@ end
 
 local function inject_option(npc_id, npc_index, zone_id, menu_id, option_index, bool)
     windower.packets.inject_outgoing(0x5B, 'I3H4':pack(0, npc_id, option_index, npc_index, bool, zone_id, menu_id))
-    state = 2
     return true
 end
 
@@ -212,6 +211,7 @@ local function porter_retrieve(data, update, zone_id, menu_id)
             end
         end
     end
+    state = 3
     return inject_option(npc_id, npc_index, zone_id, menu_id, 0x40000000, 0)
 end
 
@@ -229,10 +229,25 @@ local function check_event(data, update)
         if update and update == last_update then
             return true
         end
+        state = 2
         last_update = update
         return events[zone_id][menu_id](data, update, zone_id, menu_id)
     end
     return false
+end
+
+local function release_event(data, release)
+    local zone_id, menu_id = data:unpack('H2', 0x2A+1)
+    if menu_id == release:unpack('H', 0x05+1) then
+        local npc_id = data:unpack('I', 0x04+1)
+        local npc_index = data:unpack('H', 0x28+1)
+        inject_option(npc_id, npc_index, zone_id, menu_id, 0x40000000, 0)
+        state = 0
+        last_update = nil
+        retrieve = {}
+        store = {}
+        storing_items = false
+    end
 end
 
 windower.register_event('incoming chunk', function(id, data, modified, injected, blocked)
@@ -240,15 +255,19 @@ windower.register_event('incoming chunk', function(id, data, modified, injected,
         return check_event(data)
     elseif id == 0x05C and state == 2 then
         check_event(windower.packets.last_incoming(0x34), data)
-    elseif id == 0x052 and state == 3 then
-        state = 0
-        last_update = nil
-        porter_trade()
+    elseif id == 0x052 and state ~= 0 then
+        if state == 3 then
+            state = 0
+            last_update = nil
+            porter_trade()
+        elseif state == 2 and data:byte(0x04+1) == 2 then
+            release_event(windower.packets.last_incoming(0x34), data)
+        end
     end
 end)
 
 windower.register_event('outgoing chunk', function(id, data, modified, injected, blocked)
-    if id == 0x05B and state ~= 0 and (data:byte(15) == 0 or not injected)  then
+    if id == 0x05B and state ~= 0 and not injected then
         state = 3
     end
 end)
