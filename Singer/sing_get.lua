@@ -33,7 +33,7 @@ get.songs = {
     wcarol = {'Wind Carol','Wind Carol II'},
     ecarol = {'Earth Carol','Earth Carol II'},
     tcarol = {'Lightning Carol','Lightning Carol II'},
-    wcarol = {'Water Carol','Water Carol II'},
+    acarol = {'Water Carol','Water Carol II'},
     lcarol = {'Light Carol','Light Carol II'},
     dcarol = {'Dark Carol','Dark Carol II'},
     }
