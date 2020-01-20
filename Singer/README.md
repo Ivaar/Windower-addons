@@ -46,6 +46,6 @@ To turn a song off:
 *[buff] name of buff, currently supports all bard buffs 
     e.g march, minuet, madrigal, scherzo, prelude, ballad, mazurka are all valid buff names
     Note: Etudes and Carols are a bit different. If you want STR Etude you would do setude, DEX deteude, VIT vetude, etc etc
-          For Carols if you wanted Fire Carol you would do fcarol, ice icarol, etc etc. With one exception Lightning Carol is tcarol as in Thunder Resistance bcause there is also Light Carol which is lcarol.
+          For Carols if you wanted Fire Carol you would do fcarol, Ice icarol, etc etc. With two exceptions Lightning Carol is tcarol as in Thunder Resistance because there is also Light Carol which is lcarol and Water Carol is acarol as in Aqua because of Wind Carol being wcarol.
 	
 **[song] name of song as it appears in game, not case sensitive.
