@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.19.10.09'
+_addon.version = '1.20.01.19'
 
 require('luau')
 require('pack')
