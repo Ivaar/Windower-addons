@@ -85,6 +85,14 @@ local equip_mods = {
     [27429] = {Scherzo=0.1},    -- 'Fili Cothurnes',
     [27430] = {Scherzo=0.1},    -- 'Fili Cothurnes +1',
     [26255] = {Madrigal=0.1,Prelude=0.1}, -- 'Intarabus\'s Cape',
+    [25561] = {Etude=0.1},      -- 'Mousai Turban',
+    [25562] = {Etude=0.2},      -- 'Mousai Turban +1',
+    [25988] = {Carol=0.1},      -- 'Mousai Gages',
+    [25989] = {Carol=0.2},      -- 'Mousai Gages +1',
+    [25901] = {Minne=0.1},      -- 'Mousai Seraweels',
+    [25902] = {Minne=0.2},      -- 'Mousai Seraweels +1',
+    [25968] = {Mambo=0.1},      -- 'Mousai Crackows',
+    [25969] = {Mambo=0.2},      -- 'Mousai Crackows +1',
     }
 
 local slots = {'main','sub','range','head','neck','body','hands','legs','feet','back'}
