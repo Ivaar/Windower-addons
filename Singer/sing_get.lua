@@ -21,6 +21,21 @@ get.songs = {
     sirvente = {'Foe Sirvente'},
     dirge = {'Adventurer\'s Dirge'},
     scherzo = {'Sentinel\'s Scherzo'},
+    setude = {'Herculean Etude','Sinewy Etude'},
+    detude = {'Uncanny Etude','Dextrous Etude'},
+    vetude = {'Vital Etude','Vivacious Etude'},
+    aetude = {'Swift Etude','Quick Etude'},
+    ietude = {'Sage Etude','Learned Etude'},
+    metude = {'Logical Etude','Spirited Etude'},
+    cetude = {'Bewitching Etude','Enchanting Etude'},
+    fcarol = {'Fire Carol','Fire Carol II'},
+    icarol = {'Ice Carol','Ice Carol II'},
+    wcarol = {'Wind Carol','Wind Carol II'},
+    ecarol = {'Earth Carol','Earth Carol II'},
+    tcarol = {'Lightning Carol','Lightning Carol II'},
+    acarol = {'Water Carol','Water Carol II'},
+    lcarol = {'Light Carol','Light Carol II'},
+    dcarol = {'Dark Carol','Dark Carol II'},
     }
 
 local song = {
