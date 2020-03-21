@@ -33,7 +33,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'AutoGEO','geo'}
 _addon.name = 'AutoGEO'
-_addon.version = '1.15.07.19'
+_addon.version = 1.2020.03.20'
 
 require('luau')
 texts = require('texts')
