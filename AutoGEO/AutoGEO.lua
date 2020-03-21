@@ -1,34 +1,34 @@
 --[[
 
     Commands:
-    
+
     [spell] is the spells name without the Indi-/Geo- prefix
-    
-    //geo indi [spell] 
+
+    //geo indi [spell]
         e.g "//geo indi precision"  "geo indi off"
-    
-    //geo geo [spell] 
+
+    //geo geo [spell]
         e.g "//geo geo precision"  "//geo geo off"
-     
-    //geo entrust player [spell] 
+
+    //geo entrust player [spell]
         "e.g //geo entrust kupipi refresh"  "//geo entrust off"
-        
+
     //geo refresh kupipi [on/off]   -- /ma refresh kupipi
 
     //geo haste tenzen [on/off]     -- /ma haste tenzen
-    
+
     //geo recast indi [min] [max]   -- Begin recasting indi between [min] and [max] seconds before they wear off.(randomized)
-    
+
     //geo recast buff [min] [max]   -- Same as the above for haste and refresh.
 
     //geo aug lifestream 20         -- set indi effect duration augment on lifestream cape
-    
+
     //geo active                    -- display active settings in text box
-    
+
     //geo save                      -- save settings on per character basis
-    
+
     //geo [on/off]                  -- turn actions on/off
-    
+
 --]]
 _addon.author = 'Ivaar'
 _addon.commands = {'AutoGEO','geo'}
@@ -201,14 +201,15 @@ function prerender()
         end
 
         local entrust = settings.entrust.target and geo_spells:with('en', settings.entrust.ma)
-        if not JA_WS_lock and entrust and valid_target(settings.entrust.target,20) and abil_recasts[93] and spell_recasts[entrust.id] <= 0 and play.vitals.mp >= entrust.mp_cost and 
+        if not JA_WS_lock and entrust and valid_target(settings.entrust.target,20) and abil_recasts[93] and spell_recasts[entrust.id] <= 0 and play.vitals.mp >= entrust.mp_cost and
             (not timers.entrust[settings.entrust.target] or timers.entrust[settings.entrust.target].spell ~= entrust.en or os.time()-timers.entrust[settings.entrust.target].ts+recast>0) then
             if buffs.entrust then
                 use_MA(entrust.en,settings.entrust.target)
+                return
             elseif abil_recasts[93] <= 0 then
                 use_JA('Entrust','<me>')
+                return
             end
-            return
         end
 
         if settings.buffs.haste:length()+settings.buffs.refresh:length() ~= 0 then
@@ -237,7 +238,7 @@ end
 
 function valid_target(targ,dst)
     for ind,member in pairs(windower.ffxi.get_party()) do
-        if type(member) == 'table' and member.mob and member.mob.name:lower() == targ:lower() and math.sqrt(member.mob.distance) < dst and not member.mob.charmed and member.mob.hpp > 0 then
+        if type(member) == 'table' and member.mob and member.mob.name:lower() == targ:lower() and math.sqrt(member.mob.distance) < dst and (member.mob.is_npc or not member.mob.charmed) and member.mob.hpp > 0 then
            return true
         end
     end
@@ -268,7 +269,7 @@ function addon_command(...)
                 else
                     addon_message('Invalid spell name.')
                 end
-            elseif commands[2] == 'off' then   
+            elseif commands[2] == 'off' then
                 settings.entrust = {}
                 addon_message('Entrust will not be used')
             end
@@ -297,7 +298,7 @@ function addon_command(...)
             settings.aug['lifestream'] = tonumber(commands[3])
             addon_message('Lifestream Cape = Indi eff. dur. +%s.':format(commands[3]))
         elseif type(settings[commands[1]]) == 'string' and commands[2] then
-            if commands[2] == 'off' then   
+            if commands[2] == 'off' then
                 settings[commands[1]] = nil
                 addon_message('%s will not be used':format(commands[1]))
             else
@@ -311,7 +312,7 @@ function addon_command(...)
             end
         elseif type(settings[commands[1]]) == 'number' and commands[2] and tonumber(commands[2]) then
             settings[commands[1]] = tonumber(commands[2])
-            addon_message('%s is now set to %d':format(commands[1],settings[commands[1]]))  
+            addon_message('%s is now set to %d':format(commands[1],settings[commands[1]]))
         elseif type(settings[commands[1]]) == 'boolean' then
             if (not commands[2] and settings[commands[1]] == true) or (commands[2] and commands[2] == 'off') then
                 settings[commands[1]] = false
@@ -381,7 +382,7 @@ function check_incoming_chunk(id,original,modified,injected,blocked)
             elseif spell_ids[packet.Param] then
                 local spell = spell_ids[packet.Param]
                 local target = windower.ffxi.get_mob_by_id(packet['Target 1 ID'])
-                timers[spell.enl:lower()][target.name:lower()] = os.time()+spell.dur 
+                timers[spell.enl:lower()][target.name:lower()] = os.time()+spell.dur
             end
         elseif L{3,5,11}:contains(packet.Category) then -- 2 Ranged Attacks
             -- Finish Casting/WS/Item Use
