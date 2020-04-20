@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.01.20'
+_addon.version = '1.20.04.19'
 
 require('luau')
 require('pack')
@@ -246,10 +246,10 @@ windower.register_event('addon command', function(...)
         addon_message('settings Saved.')
     elseif commands[1] == 'ignore' and commands[3] then
         local ind = settings.ignore:find(commands[2])
-        if not ind and commands[3] == '-' then
+        if not ind and commands[3] == '+' then
             settings.ignore:append(commands[2])
             addon_message('%s will now be ignored.':format(commands[2]:ucfirst()))
-        elseif ind and commands[3] == '+' then
+        elseif ind and commands[3] == '-' then
             settings.ignore:remove(ind)
             addon_message('Will no longer ignore %s.':format(commands[2]:ucfirst()))
         end
@@ -328,7 +328,7 @@ windower.register_event('addon command', function(...)
         elseif n then
             addon_message('Error: %d exceeds the maximum value for %s.':format(n,commands[1]))
         end
-    elseif type(settings[commands[1]]) == 'string' and commands[2] then
+    elseif type(default[commands[1]]) == 'string' and commands[2] then
         local song = get.song_by_name(table.concat(commands, ' ',2))
         if song then
             settings[commands[1]] = song.enl
@@ -336,14 +336,14 @@ windower.register_event('addon command', function(...)
         else
             addon_message('Invalid song name.')
         end
-   elseif type(settings[commands[1]]) == 'number' and commands[2] and tonumber(commands[2]) then
+   elseif type(default[commands[1]]) == 'number' and commands[2] and tonumber(commands[2]) then
         settings[commands[1]] = tonumber(commands[2])
         addon_message('%s is now set to %s':format(commands[1],settings[commands[1]]))
-    elseif type(settings[commands[1]]) == 'boolean' then
+    elseif type(default[commands[1]]) == 'boolean' then
         if commands[1] == 'actions' then
             initialize()
         end
-        if not commands[1] then
+        if not commands[2] then
             settings[commands[1]] = not settings[commands[1]]
         elseif commands[2] == 'on' then
             settings[commands[1]] = true
@@ -354,6 +354,8 @@ windower.register_event('addon command', function(...)
             song_timers.reset(true)
         end
         addon_message('%s %s':format(commands[1],settings[commands[1]] and 'On' or 'Off'))
+    elseif commands[1] == 'reset' then
+        song_timers.reset()
     elseif commands[1] == 'eval' then
         assert(loadstring(table.concat(commands, ' ',2)))()
     end

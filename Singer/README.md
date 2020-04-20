@@ -31,6 +31,7 @@ Accepts auto-translated terms.
 	//sing dummy2 [song]            -  Second dummy song, both are ignored if you do not own the proper equipment.**
 	//sing ignore [name] [+|-]      -  Adding party members will ignore thier distance check when casting songs.
 	//sing save                     -  Saves settings on a per character basis.
+	//sing reset					-  Reset song timers.
 
 To configure songs use:
 	
