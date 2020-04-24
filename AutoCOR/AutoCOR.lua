@@ -15,6 +15,8 @@ default = {
     active = true,
     crooked_cards = 1,
     text = {text = {size=10}},
+    autora = true,
+    aoe = {['p1'] = true,['p2'] = true,['p3'] = true,['p4'] = true,['p5'] = true},                    
     }
 
 settings = config.load(default)
@@ -59,8 +61,57 @@ rolls = T{
     [391] = {id=391,buff=600,en="Runeist's Roll",lucky=4,unlucky=8,bonus="Magic Evasion",job='Run'},
     }
 
+local party_slots = L{'p1','p2','p3','p4','p5'}
+local roll_aoe = 8
+
+do
+    local equippable_bags = {'Inventory','Wardrobe','Wardrobe2','Wardrobe3','Wardrobe4'}
+
+    for _, bag in ipairs(equippable_bags) do
+        local items = windower.ffxi.get_items(bag)
+        if items.enabled then
+            for i,v in ipairs(items) do
+                if v.id == 15810 then
+                    roll_aoe = 16
+                end
+            end
+        end
+    end
+end
+
+local function is_valid_target(target, distance)
+    return target.hpp > 0 and target.distance:sqrt() < distance and (target.is_npc or not target.charmed)
+end
+
+function aoe_range()
+    for slot in party_slots:it() do
+        local member = windower.ffxi.get_mob_by_target(slot)
+
+        if member and settings.aoe[slot] and not is_valid_target(member, roll_aoe) then
+            return false
+        end
+    end
+    return true
+end
+
+function get_party_member_slot(name)
+    for slot in party_slots:it() do
+        local member = windower.ffxi.get_mob_by_target(slot)
+
+        if member and member.name:lower() == name then
+            return slot
+        end
+    end
+end
+
 local display_box = function()
-    return 'AutoCOR [O%s]\nRoll 1 [%s]\nRoll 2 [%s]':format(actions and 'n' or 'ff',settings.roll[1],settings.roll[2])
+    local str = '\n AoE:'
+    for slot in party_slots:it() do
+        local name = (windower.ffxi.get_mob_by_target(slot) or {name=''}).name
+
+        str = str..'\n <%s> [%s] %s':format(slot, settings.aoe[slot] and 'On' or 'Off', name)
+    end
+    return 'AutoCOR [O%s]\nRoll 1 [%s]\nRoll 2 [%s]':format(actions and 'n' or 'ff',settings.roll[1],settings.roll[2]) .. str
 end
 
 cor_status = texts.new(display_box(),settings.text,setting)
@@ -77,6 +128,7 @@ windower.register_event('outgoing chunk',function(id,data,modified,is_injected,i
 end)
 
 windower.register_event('prerender',function ()
+    cor_status:text(display_box())
     if not actions then return end
     local curtime = os.clock()
     if nexttime + del <= curtime then
@@ -85,7 +137,7 @@ windower.register_event('prerender',function ()
         local play = windower.ffxi.get_player()
         if not play or play.main_job ~= 'COR' or play.status > 1 then return end
         local abil_recasts = windower.ffxi.get_ability_recasts()
-        if buffs[16] or is_moving then return end
+        if buffs[16] or is_moving or not aoe_range() then return end
         if buffs[309] then
             if abil_recasts[198] and abil_recasts[198] == 0 then
                 use_JA('/ja "Fold" <me>')
@@ -148,6 +200,20 @@ windower.register_event('addon command', function(...)
                     end
                 end
             end
+        end
+    elseif commands[1] == 'aoe' and commands[2] then
+        local slot = tonumber(commands[2], 6, 0) or commands[2]:match('[1-5]')
+        slot = slot and 'p' .. slot or get_party_member_slot(commands[2])
+
+        if not slot then
+        elseif not commands[3] then
+            settings.aoe[slot] = not settings.aoe[slot]
+        elseif commands[3] == 'on' then
+            settings.aoe[slot] = true
+            addon_message('Will now ensure <%s> is in AoE range.':format(slot))
+        elseif commands[3] == 'off' then
+            settings.aoe[slot] = false
+            addon_message('Ignoring slot <%s>':format(slot))                                               
         end
     elseif commands[1] == 'save' then
         settings:save()
