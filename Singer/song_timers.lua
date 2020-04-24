@@ -130,7 +130,6 @@ function song_timers.buff_lost(targ_id,buff_id)
     local buff = get.songs[song_buffs[buff_id]]
     if not buff or not timers[targ] then return end
     local targ = windower.ffxi.get_mob_by_id(targ_id).name
-    if settings.ignore:contains(targ:lower()) then return end
     local minimum,song
     for k,song_name in pairs(buff) do
         local song_timer = timers[targ][song_name]
@@ -169,7 +168,7 @@ function song_timers.create(song,targ,dur,current_time,buffs)
     if timers.AoE[song] and targ ~= 'AoE' or not settings.timers then return end
     windower.send_command('timers create "%s [%s]" %s down':format(song,targ,dur))
 end
-              
+
 function song_timers.adjust(spell_name,targ,buffs)
     local current_time = os.time()
     local dur = song_timers.duration(spell_name,buffs)

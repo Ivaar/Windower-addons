@@ -21,6 +21,7 @@ get.songs = {
     sirvente = {'Foe Sirvente'},
     dirge = {'Adventurer\'s Dirge'},
     scherzo = {'Sentinel\'s Scherzo'},
+    carol = {'Light Carol','Light Carol II'},
     setude = {'Herculean Etude','Sinewy Etude'},
     detude = {'Uncanny Etude','Dextrous Etude'},
     vetude = {'Vital Etude','Vivacious Etude'},
@@ -37,6 +38,26 @@ get.songs = {
     lcarol = {'Light Carol','Light Carol II'},
     dcarol = {'Dark Carol','Dark Carol II'},
     }
+
+--[[
+local carol_songs = {
+    fire = {'Fire Carol','Fire Carol II'},
+    ice = {'Ice Carol','Ice Carol II'},
+    wind = {'Wind Carol','Wind Carol II'},
+    earth = {'Earth Carol','Earth Carol II'},
+    lightning = {'Lightning Carol','Lightning Carol II'},
+    water = {'Water Carol','Water Carol II'},
+    light = {'Light Carol','Light Carol II'},
+    dark = {'Dark Carol','Dark Carol II'}
+    }
+
+function set_carol(ele)
+    if carol_songs[ele] then
+        get.songs.carol = carol_songs[ele]
+        return true
+    end
+end
+]]
 
 local song = {
     [368] = 'Foe Requiem',
@@ -287,25 +308,40 @@ function get.eye_sight(play,targ)
     return math.abs(-math.atan2(targ.y - play.y, targ.x - play.x) - play.facing) < 0.76
 end
 
-function get.valid_target(targ,dst)
-    for ind,member in pairs(windower.ffxi.get_party()) do
-        if type(member) == 'table' and member.mob and member.mob.in_party and member.mob.hpp > 0 and 
-            member.mob.name:lower() == targ:lower() and math.sqrt(member.mob.distance) < dst and not member.mob.charmed then
-            return true
+get.party_slots = L{'p1','p2','p3','p4','p5'}
+
+local function is_valid_target(target, distance)
+    return target.hpp > 0 and target.distance:sqrt() < distance and (target.is_npc or not target.charmed)
+end
+
+function get.valid_target(name, distance)
+    for ind, member in pairs(windower.ffxi.get_party()) do
+        if type(member) == 'table' and member.mob and member.mob.name:lower() == name then
+            return is_valid_target(member.mob, distance)
         end
     end
     return false
 end
 
 function get.aoe_range()
-    for ind,member in pairs(windower.ffxi.get_party()) do
-        if type(member) == 'table' and member.mob and member.mob.in_party and member.mob.hpp > 0 and
-            not settings.song[member.mob.name:lower()] and not settings.ignore:find(member.mob.name:lower()) and
-            math.sqrt(member.mob.distance) >= 10 and not member.mob.charmed then
+    for slot in get.party_slots:it() do
+        local member = windower.ffxi.get_mob_by_target(slot)
+
+        if member and settings.aoe[slot] and not is_valid_target(member, 10) then
             return false
         end
     end
     return true
+end
+
+function get.party_member_slot(name)
+    for slot in get.party_slots:it() do
+        local member = windower.ffxi.get_mob_by_target(slot)
+
+        if member and member.name:lower() == name then
+            return slot
+        end
+    end
 end
 
 return get

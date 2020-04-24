@@ -43,8 +43,8 @@ function cast.check_song(songs,targ,buffs,spell_recasts,recast)
         for x = 1, num do
             local song = get.song_by_name(get.songs[buff][x])
             if song and spell_recasts[song.id] <= 0 and
-            (not timers[targ] or not timers[targ][song.enl] or os.time()-timers[targ][song.enl].ts+recast > 0 or 
-            (buffs.troubadour and not timers[targ][song.enl].nt) or 
+            (not timers[targ] or not timers[targ][song.enl] or os.time()-timers[targ][song.enl].ts+recast > 0 or
+            (buffs.troubadour and not timers[targ][song.enl].nt) or
             (buffs['soul voice'] and not timers[targ][song.enl].sv)) then
                 return song.enl
             end
