@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.04.19'
+_addon.version = '1.20.04.23'
 
 require('luau')
 require('pack')
@@ -173,7 +173,7 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
             if spell then
                 timers.buffs[spell.enl][windower.ffxi.get_mob_by_id(packet['Target 1 ID']).name:lower()] = os.time()+spell.dur
             elseif song then
-                if packet['Target Count'] > 1 or packet['Target 1 ID'] == packet['Actor'] and get.aoe_range() then
+                if packet['Target Count'] > 1 and get.aoe_range() then
                     song_timers.adjust(song,'AoE',buffs)
                 end
                 for x = 1,packet['Target Count'] do
@@ -304,7 +304,7 @@ windower.register_event('addon command', function(...)
            settings.buffs[commands[1]]:remove(ind)
         end
     elseif get.songs[commands[1]] and commands[2] then
-        local n = tonumber(commands[2])
+        local n = tonumber(commands[2] or 1)
         local buff = commands[1]
         local name = commands[3]
         if n and n ~= 0 and n <= #get.songs[buff] then

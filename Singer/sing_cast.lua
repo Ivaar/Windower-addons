@@ -7,13 +7,18 @@ end
 
 function cast.MA(str,ta)
     windower.send_command('input /ma "%s" %s':format(str,ta))
-    del = settings.delay
+    del = 1.2
 end
 
 function cast.song(str,ta,buffs,recasts,JA_WS_lock)
-    if settings.nightingale and not JA_WS_lock and not buffs.nightingale and recasts[109] <= 0 then
+    if settings.nightingale and not JA_WS_lock and not buffs.nightingale and recasts[109] <= 0 and recasts[110] <= 0 then
         cast.JA('input /ja "Nightingale" <me>')
     elseif settings.troubadour and not JA_WS_lock and not buffs.troubadour and recasts[110] <= 0 then
+        for targ, songs in pairs(timers) do
+            for song in pairs(songs) do
+                timers[targ][song].nt = false
+            end
+        end
         cast.JA('input /ja "Troubadour" <me>')
     elseif not JA_WS_lock and str == settings.marcato and not buffs.marcato and not buffs['soul voice'] and recasts[48] <= 0 then
         cast.JA('input /ja "Marcato" <me>')
