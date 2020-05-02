@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.04.24'
+_addon.version = '1.20.05.01'
 
 require('luau')
 require('pack')
@@ -16,13 +16,15 @@ song_timers = require('song_timers')
 default = {
     delay=4,
     dummy=L{'Knight\'s Minne','Knight\'s Minne II'},
-    buffs={['haste']=L{},['refresh']=L{}},
+    buffs=T{['haste']=L{},['refresh']=L{},['aurorastorm']=L{},['firestorm']=L{}},
+	debuffs=L{'Carnage Elegy','Pining Nocturne'},
     marcato='Sentinel\'s Scherzo',
     clarion={aoe='minuet'},
     actions=false,
     pianissimo=false,
     nightingale=true,
     troubadour=true,
+	debuffing=false,
     recast={song={min=20,max=25},buff={min=5,max=10}},
     active=true,
     timers=true,
@@ -32,7 +34,7 @@ default = {
     use_ws=false,
     min_ws=20,
     max_ws=99,
-    box={text={size=10}}
+    box={bg={visible=false},text={size=10}},
 }
 
 settings = config.load(default)
@@ -40,9 +42,10 @@ settings = config.load(default)
 del = 0
 counter = 0
 interval = 0.1
-timers = {AoE={},buffs={Haste={},Refresh={}}}
+timers = {AoE={}, buffs={}}
 last_coords = 'fff':pack(0,0,0)
 buffs = get.buffs()
+debuffed = {}
 
 do
     local time = os.time()
@@ -77,16 +80,30 @@ local display_box = function()
         end
     end
     str = str..'\n AoE:'
-    for slot in get.party_slots:it() do
-        local name = (windower.ffxi.get_mob_by_target(slot) or {name=''}).name
-
-        str = str..'\n <%s> [%s] %s':format(slot, settings.aoe[slot] and 'On' or 'Off', name)
+    local party = windower.ffxi.get_party()
+    for x = 1, 5 do
+        local slot = 'p' .. x
+        local member = party[slot]
+        member = member and member.name or ''
+        str = str..'\n <%s> [%s] %s':format(slot, settings.aoe[slot] and 'On' or 'Off', member)
+    end
+	if settings.debuffing then
+		str = str..'\n Debuffing:[On]':format(settings.debuffing and 'On' or 'Off', settings.debuffing)
+	end
+    for k,v in ipairs(settings.debuffs) do
+        str = str..'\n   %d:[%s]':format(k, v)
     end
     for k,v in ipairs(settings.buffs.haste) do
        str = str..'\n Haste:[%s]':format(v:ucfirst())
     end
     for k,v in ipairs(settings.buffs.refresh) do
         str = str..'\n Refresh:[%s]':format(v:ucfirst())
+    end
+    for k,v in ipairs(settings.buffs.aurorastorm) do
+        str = str..'\n Aurorastorm:[%s]':format(v:ucfirst())
+    end
+    for k,v in ipairs(settings.buffs.firestorm) do
+        str = str..'\n Firestorm:[%s]':format(v:ucfirst())
     end
     for k,v in pairs(settings.recast) do
         str = str..'\n Recast %s:[%d-%d]':format(k:ucfirst(),v.min,v.max)
@@ -108,18 +125,17 @@ function do_stuff()
     if counter >= del then
         counter = 0
         del = interval
-        for k,v in pairs(timers) do song_timers.update(k) end
         local play = windower.ffxi.get_player()
+
         if not play or play.main_job ~= 'BRD' or (play.status ~= 1 and play.status ~= 0) then return end
-        local JA_WS_lock,goal_tp
-        local spell_recasts = windower.ffxi.get_spell_recasts()
-        local ability_recasts = windower.ffxi.get_ability_recasts()
-        local recast = math.random(settings.recast.song.min,settings.recast.song.max)+math.random()
         if is_moving or is_casting or buffs.stun or buffs.sleep or buffs.charm or buffs.terror or buffs.petrification then return end
-        if buffs.amnesia or buffs.impairment then JA_WS_lock = true end
+
+        local JA_WS_lock = buffs.amnesia or buffs.impairment
+
         if use_ws and not JA_WS_lock and play.status == 1 then
             local targ = windower.ffxi.get_mob_by_target('t')
-            if not buffs['aftermath: lv.3'] or buffs['aftermath: lv.3'] <= 5 then
+            local goal_tp
+            if not buffs['aftermath: lv.3'] or os.time() - buffs['aftermath: lv.3'] <= 5 then
                 goal_tp = 3000
             else
                 goal_tp = 1000
@@ -133,33 +149,72 @@ function do_stuff()
                 return
             end
         end
+
         if buffs.silence or buffs.mute or buffs.omerta then return end
+
+        local spell_recasts = windower.ffxi.get_spell_recasts()
+        local ability_recasts = windower.ffxi.get_ability_recasts()
+        local recast = math.random(settings.recast.song.min,settings.recast.song.max)+math.random()
+--[[
+        for k, v in pairs(timers) do
+            song_timers.update(k)
+        end
+]]
         if get.aoe_range() then
             local song = cast.check_song(settings.songs,'AoE',buffs,spell_recasts,recast) 
-            if song then cast.song(song,'<me>',buffs,ability_recasts,JA_WS_lock) return end
+
+            if song then
+                cast.song(song,'<me>',buffs,ability_recasts,JA_WS_lock)
+                return
+            end
         end
+
         if settings.pianissimo then
             for targ,songs in pairs(settings.song) do
                 if get.valid_target(targ:lower(), 20) then
                     local targ = targ:ucfirst()
-                    local song = cast.check_song(songs,targ,buffs,spell_recasts,recast) 
-                    if song then cast.song(song,targ,buffs,ability_recasts,JA_WS_lock) return end
+                    local song = cast.check_song(songs,targ,buffs,spell_recasts,recast)
+
+                    if song then
+                        cast.song(song,targ,buffs,ability_recasts,JA_WS_lock)
+                        return
+                    end
                 end
             end
         end
-        if table.length(settings.buffs.haste)+table.length(settings.buffs.refresh) == 0 then return end
+
         local recast = math.random(settings.recast.buff.min,settings.recast.buff.max)+math.random()
         for key,targets in pairs(settings.buffs) do
             local spell = get.spell(key)
             for k,targ in ipairs(targets) do
                 if targ and spell and spell_recasts[spell.id] <= 0 and get.valid_target(targ:lower(), 20) and play.vitals.mp >= 40 and
-                (not timers.buffs or not timers.buffs[spell.enl] or not timers.buffs[spell.enl][targ] or
+                (not timers.buffs or not timers.buffs[spell.enl] or not timers.buffs[spell.enl][targ] or 
                 os.time() - timers.buffs[spell.enl][targ]+recast > 0) then
                     cast.MA(spell.enl,targ)
                     return
                 end
             end
         end
+        if settings.debuffing then
+            local targ = windower.ffxi.get_mob_by_target('bt')
+
+            if targ and targ.hpp > 0 and targ.valid_target and targ.distance < 20 then
+                for _,song in ipairs(settings.debuffs) do
+                    local effect
+                    for k,v in pairs(get.debuffs) do
+                        if table.find(v, song) then
+                            effect =  k
+                            break
+                        end
+                    end
+
+                    if effect and (not debuffed[targ.id] or not debuffed[targ.id][effect]) and spell_recasts[get.song_by_name(song).id] == 0 then
+                        cast.MA(song,'<bt>')
+						break
+                    end
+                end
+            end
+        end	
     end
 end
 
@@ -167,6 +222,8 @@ do_stuff:loop(interval)
 
 start_categories = S{7,9}
 finish_categories = S{3,5}
+buff_lost_messages = S{204,206}
+death_messages = {[6]=true,[20]=true,[113]=true,[406]=true,[605]=true,[646]=true}
 
 windower.register_event('incoming chunk', function(id,original,modified,injected,blocked)
     if id == 0x028 then
@@ -186,16 +243,38 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
             is_casting = false
             del = settings.delay
             local spell = get.spell_by_id(packet['Param'])
-            local song = get.song_name(packet['Param'])
+
             if spell then
-                timers.buffs[spell.enl][windower.ffxi.get_mob_by_id(packet['Target 1 ID']).name:lower()] = os.time()+spell.dur
-            elseif song then
-                if packet['Target Count'] > 1 and get.aoe_range() then
+                local targ = windower.ffxi.get_mob_by_id(packet['Target 1 ID'])
+
+                if targ then
+                    timers.buffs[spell.enl] = timers.buffs[spell.enl] or {}
+                    timers.buffs[spell.enl][targ.name:lower()] = os.time() + spell.dur
+                end
+                return
+            end
+
+            local song = get.song_name(packet['Param'])
+
+            if song then
+                local buff_id = packet['Target 1 Action 1 Param']
+                if song_buffs[buff_id] and packet['Target Count'] > 1 and get.aoe_range() then
+                --if song_buffs[buff_id] and packet['Target Count'] > 1 and packet['Target 1 ID'] == packet['Actor'] and get.aoe_range() then
                     song_timers.adjust(song,'AoE',buffs)
                 end
-                for x = 1,packet['Target Count'] do
-                    local targ_name = windower.ffxi.get_mob_by_id(packet['Target '..x..' ID']).name
-                    song_timers.adjust(song,targ_name,buffs)
+                for x = 1, packet['Target Count'] do
+                    local buff_id = packet['Target '..x..' Action 1 Param']
+                    if buff_id ~= 0 then
+                        local targ = windower.ffxi.get_mob_by_id(packet['Target '..x..' ID'])
+
+                        if song_buffs[buff_id] then
+                            song_timers.adjust(song,targ.name,buffs)
+                        elseif song_debuffs[buff_id] then
+                            local effect = song_debuffs[buff_id]
+                            debuffed[targ.id] = debuffed[targ.id] or {}
+                            debuffed[targ.id][effect] = true
+                        end
+                    end
                 end
             end
         elseif finish_categories:contains(packet['Category']) then
@@ -205,8 +284,10 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
         end
     elseif id == 0x029 then
         local packet = packets.parse('incoming', original)
-        --table.vprint(packet)
-        if (packet.Message) == 206 and packet['Actor'] == windower.ffxi.get_mob_by_target('me').id then
+
+        if death_messages[packet.Message] then
+            debuffed[packet.Target] = nil
+        elseif buff_lost_messages:contains(packet.Message) and packet['Actor'] == windower.ffxi.get_mob_by_target('me').id then
             song_timers.buff_lost(packet['Target'],packet['Param 1']) 
         end
     elseif id == 0x63 and original:byte(5) == 9 then
@@ -263,7 +344,7 @@ short_commands = {
 }
 
 windower.register_event('addon command', function(...)
-    local commands = L{...}
+    local commands = T{...}
     
     for x=1,#commands do commands[x] = windower.convert_auto_trans(commands[x]):lower() end
     
@@ -296,15 +377,20 @@ windower.register_event('addon command', function(...)
         slot = slot and 'p' .. slot or get.party_member_slot(commands[2])
 
         if not slot then
+            return
         elseif not commands[3] or not command then
             settings.aoe[slot] = not settings.aoe[slot]
         elseif command == 'on' then
             settings.aoe[slot] = true
-            addon_message('Will now ensure <%s> is in AoE range.':format(slot))
         elseif command == 'off' then
             settings.aoe[slot] = false
+        end
+
+        if settings.aoe[slot] then
+            addon_message('Will now ensure <%s> is in AoE range.':format(slot))
+        else
             addon_message('<%s> will now be ignored for AoE songs.':format(slot))
-        end      
+        end   
     elseif commands[1] == 'recast' and handled_commands.recast:contains(commands[2]) then
         settings.recast[commands[2]].min = tonumber(commands[3]) or settings.recast[commands[2]].min
         settings.recast[commands[2]].max = tonumber(commands[4]) or settings.recast[commands[2]].max
@@ -352,7 +438,7 @@ windower.register_event('addon command', function(...)
         else
             addon_message('Invalid song name.')
         end
-    elseif S{'haste','refresh'}:contains(commands[1]) and commands[2] then
+    elseif default.buffs:containskey(commands[1]) and commands[2] then
         local ind = settings.buffs[commands[1]]:find( commands[2])
         if not commands[3] then
             if ind then
@@ -396,6 +482,19 @@ windower.register_event('addon command', function(...)
         elseif n then
             addon_message('Error: %d exceeds the maximum value for %s.':format(n,commands[1]))
         end
+    elseif commands[1] == 'debuff' and commands[2] then
+        local debuff = get.song_by_name(table.concat(commands, ' ',2))
+
+        if not debuff then
+            return
+        end
+
+        local ind = settings.debuffs:find(debuff.enl)
+        if ind then
+            settings.debuffs:remove(ind)
+        else
+            settings.debuffs:append(debuff.enl)
+        end
     elseif type(default[commands[1]]) == 'string' and commands[2] then
         local song = get.song_by_name(table.concat(commands, ' ',2))
         if song then
@@ -430,6 +529,7 @@ end)
 function event_change()
     settings.actions = false
     is_casting = false
+    debuffed = {}
     song_timers.reset()
     bard_status:text(display_box())
 end

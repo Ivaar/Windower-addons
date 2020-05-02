@@ -39,6 +39,22 @@ get.songs = {
     dcarol = {'Dark Carol','Dark Carol II'},
     }
 
+get.debuffs = {
+    lullaby = {'Horde Lullaby II','Horde Lullaby','Foe Lullaby','Foe Lullaby II'},
+	elegy = {'Carnage Elegy'},
+	nocturne = {'Pining Nocturne'},
+    threnody = {
+         fire = 'Fire Threnody', fire2 = 'Fire Threnody II',
+         ice = 'Ice Threnody', ice2 = 'Ice Threnody II',
+         wind = 'Wind Threnody', wind2 = 'Wind Threnody II',
+         earth = 'Earth Threnody', earth2 = 'Earth Threnody II',
+         lightning = 'Ltng. Threnody', lightning2 = 'Ltng. Threnody II',
+         water = 'Water Threnody', water2 = 'Water Threnody II',
+         light = 'Light Threnody', light2 = 'Light Threnody II',
+         dark = 'Dark Threnody', dark2 = 'Dark Threnody II',
+    }
+}
+
 --[[
 local carol_songs = {
     fire = {'Fire Carol','Fire Carol II'},
@@ -165,11 +181,21 @@ local song = {
     [470] = 'Sentinel\'s Scherzo',
     [471] = 'Foe Lullaby II',
     [472] = 'Pining Nocturne',
+	[871] = 'Fire Threnody II',
+    [872] = 'Ice Threnody II',
+    [873] = 'Wind Threnody II',
+    [874] = 'Earth Threnody II',
+    [875] = 'Ltng. Threnody II',
+    [876] = 'Water Threnody II',
+    [877] = 'Light Threnody II',
+    [878] = 'Dark Threnody II',
     }
 
 local spell = {
     [57] = {id=57,enl='Haste',dur=180},
     [109] = {id=109,enl='Refresh',dur=150},
+	[119] = {id=119,enl='Aurorastorm',dur=180},
+	[115] = {id=115,enl='Firestorm',dur=300},
     }
 
 --[[
@@ -324,10 +350,12 @@ function get.valid_target(name, distance)
 end
 
 function get.aoe_range()
+    local party = windower.ffxi.get_party()
+    
     for slot in get.party_slots:it() do
-        local member = windower.ffxi.get_mob_by_target(slot)
+        local member = party[slot]
 
-        if member and settings.aoe[slot] and not is_valid_target(member, 10) then
+        if member and member.zone == party.p0.zone and settings.aoe[slot] and (not member.mob or not is_valid_target(member.mob, 10)) then
             return false
         end
     end
@@ -335,10 +363,10 @@ function get.aoe_range()
 end
 
 function get.party_member_slot(name)
-    for slot in get.party_slots:it() do
-        local member = windower.ffxi.get_mob_by_target(slot)
+    local party = windower.ffxi.get_party()
 
-        if member and member.name:lower() == name then
+    for slot in get.party_slots:it() do
+        if party[slot] and party[slot].name:lower() == name then
             return slot
         end
     end
