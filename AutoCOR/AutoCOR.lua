@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.name = 'AutoCOR'
 _addon.commands = {'cor'}
-_addon.version = '1.18.01.29'
+_addon.version = '1.20.05.02'
 
 require('pack')
 require('lists')
@@ -206,14 +206,19 @@ windower.register_event('addon command', function(...)
         slot = slot and 'p' .. slot or get_party_member_slot(commands[2])
 
         if not slot then
-        elseif not commands[3] then
+            return
+        elseif not commands[3]  then
             settings.aoe[slot] = not settings.aoe[slot]
-        elseif commands[3] == 'on' then
+        elseif command == 'on' then
             settings.aoe[slot] = true
-            addon_message('Will now ensure <%s> is in AoE range.':format(slot))
-        elseif commands[3] == 'off' then
+        elseif command == 'off' then
             settings.aoe[slot] = false
-            addon_message('Ignoring slot <%s>':format(slot))                                               
+        end
+
+        if settings.aoe[slot] then
+            windower.add_to_chat(207, 'Will now ensure <%s> is in AoE range.':format(slot))
+        else
+            windower.add_to_chat(207, 'Ignoring slot <%s>':format(slot))
         end
     elseif commands[1] == 'save' then
         settings:save()
