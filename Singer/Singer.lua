@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.05.01'
+_addon.version = '1.20.05.02'
 
 require('luau')
 require('pack')
@@ -17,24 +17,24 @@ default = {
     delay=4,
     dummy=L{'Knight\'s Minne','Knight\'s Minne II'},
     buffs=T{['haste']=L{},['refresh']=L{},['aurorastorm']=L{},['firestorm']=L{}},
-	debuffs=L{'Carnage Elegy','Pining Nocturne'},
+    debuffs=L{'Carnage Elegy','Pining Nocturne'},
     marcato='Sentinel\'s Scherzo',
     clarion={aoe='minuet'},
     actions=false,
     pianissimo=false,
     nightingale=true,
     troubadour=true,
-	debuffing=false,
+    debuffing=false,
     recast={song={min=20,max=25},buff={min=5,max=10}},
     active=true,
     timers=true,
-    aoe = {['p1'] = true,['p2'] = true,['p3'] = true,['p4'] = true,['p5'] = true},
+    aoe={['p1'] = true,['p2'] = true,['p3'] = true,['p4'] = true,['p5'] = true},
     song={},
     songs={march=2},
     use_ws=false,
     min_ws=20,
     max_ws=99,
-    box={bg={visible=false},text={size=10}},
+    box={bg={visible=false},text={size=10},pos={x=650,y=0}},
 }
 
 settings = config.load(default)
@@ -45,6 +45,7 @@ interval = 0.1
 timers = {AoE={}, buffs={}}
 last_coords = 'fff':pack(0,0,0)
 buffs = get.buffs()
+times = {}
 debuffed = {}
 
 do
@@ -87,9 +88,9 @@ local display_box = function()
         member = member and member.name or ''
         str = str..'\n <%s> [%s] %s':format(slot, settings.aoe[slot] and 'On' or 'Off', member)
     end
-	if settings.debuffing then
-		str = str..'\n Debuffing:[On]':format(settings.debuffing and 'On' or 'Off', settings.debuffing)
-	end
+    if settings.debuffing then
+        str = str..'\n Debuffing:[On]':format(settings.debuffing and 'On' or 'Off', settings.debuffing)
+    end
     for k,v in ipairs(settings.debuffs) do
         str = str..'\n   %d:[%s]':format(k, v)
     end
@@ -135,7 +136,7 @@ function do_stuff()
         if use_ws and not JA_WS_lock and play.status == 1 then
             local targ = windower.ffxi.get_mob_by_target('t')
             local goal_tp
-            if not buffs['aftermath: lv.3'] or os.time() - buffs['aftermath: lv.3'] <= 5 then
+            if not times['aftermath: lv.3'] or os.time() - times['aftermath: lv.3'] <= 5 then
                 goal_tp = 3000
             else
                 goal_tp = 1000
@@ -210,11 +211,11 @@ function do_stuff()
 
                     if effect and (not debuffed[targ.id] or not debuffed[targ.id][effect]) and spell_recasts[get.song_by_name(song).id] == 0 then
                         cast.MA(song,'<bt>')
-						break
+                        break
                     end
                 end
             end
-        end	
+        end
     end
 end
 
@@ -228,7 +229,7 @@ death_messages = {[6]=true,[20]=true,[113]=true,[406]=true,[605]=true,[646]=true
 windower.register_event('incoming chunk', function(id,original,modified,injected,blocked)
     if id == 0x028 then
         local packet = packets.parse('incoming', original)
-        if packet['Actor'] ~= windower.ffxi.get_mob_by_target('me').id then return false end
+        if packet['Actor'] ~= get.player_id then return false end
         if packet['Category'] == 8 then
             if (packet['Param'] == 24931) then
             -- Begin Casting
@@ -287,26 +288,33 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
 
         if death_messages[packet.Message] then
             debuffed[packet.Target] = nil
-        elseif buff_lost_messages:contains(packet.Message) and packet['Actor'] == windower.ffxi.get_mob_by_target('me').id then
+        elseif buff_lost_messages:contains(packet.Message) and packet['Actor'] == get.player_id then
             song_timers.buff_lost(packet['Target'],packet['Param 1']) 
         end
     elseif id == 0x63 and original:byte(5) == 9 then
         local set_buff = {}
+        local set_time = {}
         for n=1,32 do
             local buff_id = original:unpack('H', n*2+7)
             local buff_ts = original:unpack('I', n*4+69)
+
             if buff_ts == 0 then
                 break
             elseif buff_id ~= 255 then
                 local buff_en = res.buffs[buff_id].en:lower()
-                if buff_id == 272 then
-                    set_buff[buff_en] = math.floor(buff_ts/60+bufftime_offset)
-                else
-                    set_buff[buff_en] = (set_buff[buff_en] or 0) + 1
-                end
+
+                set_buff[buff_en] = (set_buff[buff_en] or 0) + 1
+                set_time[buff_en] = math.floor(buff_ts / 60 + bufftime_offset)
             end
         end
         buffs = set_buff
+        times = set_time
+    elseif id == 0x00A then
+        local packet = packets.parse('incoming', original)
+
+        get.player_id = packet.Player
+        get.zone_id = packet.Zone
+        get.player_name = packet.Name
     end
 end)
 

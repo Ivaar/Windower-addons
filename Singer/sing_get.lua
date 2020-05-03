@@ -41,8 +41,8 @@ get.songs = {
 
 get.debuffs = {
     lullaby = {'Horde Lullaby II','Horde Lullaby','Foe Lullaby','Foe Lullaby II'},
-	elegy = {'Carnage Elegy'},
-	nocturne = {'Pining Nocturne'},
+    elegy = {'Carnage Elegy'},
+    nocturne = {'Pining Nocturne'},
     threnody = {
          fire = 'Fire Threnody', fire2 = 'Fire Threnody II',
          ice = 'Ice Threnody', ice2 = 'Ice Threnody II',
@@ -181,7 +181,7 @@ local song = {
     [470] = 'Sentinel\'s Scherzo',
     [471] = 'Foe Lullaby II',
     [472] = 'Pining Nocturne',
-	[871] = 'Fire Threnody II',
+    [871] = 'Fire Threnody II',
     [872] = 'Ice Threnody II',
     [873] = 'Wind Threnody II',
     [874] = 'Earth Threnody II',
@@ -194,8 +194,8 @@ local song = {
 local spell = {
     [57] = {id=57,enl='Haste',dur=180},
     [109] = {id=109,enl='Refresh',dur=150},
-	[119] = {id=119,enl='Aurorastorm',dur=180},
-	[115] = {id=115,enl='Firestorm',dur=300},
+    [119] = {id=119,enl='Aurorastorm',dur=180},
+    [115] = {id=115,enl='Firestorm',dur=300},
     }
 
 --[[
@@ -206,6 +206,17 @@ for k,v in ipairs(res.spells) do
     end
 end
 ]]
+
+do
+    local info = windower.ffxi.get_info()
+
+    if info.logged_in then
+        local player = windower.ffxi.get_mob_by_target('me') or {}
+        get.player_id = player.id
+        get.player_name = player.name
+        get.zone_id = info.zone
+    end
+end
 
 local equippable_bags = {
     'Inventory',
@@ -271,7 +282,8 @@ function get.buffs()
     for _, buff_id in ipairs(windower.ffxi.get_player().buffs) do
         local buff_en = res.buffs[buff_id].en:lower()
         if buff_id == 272 then
-            set_buff[buff_en] = 10
+            set_buff[buff_en] = 1
+            times[buff_en] = 10
         else
             set_buff[buff_en] = (set_buff[buff_en] or 0) + 1
         end
@@ -351,11 +363,11 @@ end
 
 function get.aoe_range()
     local party = windower.ffxi.get_party()
-    
+
     for slot in get.party_slots:it() do
         local member = party[slot]
 
-        if member and member.zone == party.p0.zone and settings.aoe[slot] and (not member.mob or not is_valid_target(member.mob, 10)) then
+        if member and member.zone == get.zone_id and settings.aoe[slot] and (not member.mob or not is_valid_target(member.mob, 10)) then
             return false
         end
     end

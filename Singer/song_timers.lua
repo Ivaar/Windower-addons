@@ -27,9 +27,9 @@ song_buffs = {
 
 song_debuffs = {
     [2] = 'lullaby',
-	[194] = 'elegy',
-	[217] = 'threnody',
-	[223] = 'nocturne',
+    [194] = 'elegy',
+    [217] = 'threnody',
+    [223] = 'nocturne',
     }
 
 local equip_mods = {
