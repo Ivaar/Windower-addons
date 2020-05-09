@@ -106,9 +106,6 @@ local slots = {'main','sub','range','head','neck','body','hands','legs','feet','
 
 function song_timers.calc_dur(song_name, buffs, mult)
     local dur = 120
-    if buffs['clarion call'] then dur = dur + get.jp_mods.clarion end
-    if buffs.marcato then dur = dur + get.jp_mods.marcato end
-    if buffs.tenuto then dur = dur + get.jp_mods.tenuto end
     if buffs.troubadour then mult = mult*2 end
     if song_name == 'Sentinel\'s Scherzo' then 
         if buffs['soul voice'] then
@@ -117,7 +114,11 @@ function song_timers.calc_dur(song_name, buffs, mult)
             mult = mult*1.5
         end
     end
-    return math.floor(mult*dur)
+    dur = math.floor(mult * dur)
+    if buffs.marcato then dur = dur + get.jp_mods.marcato end
+    if buffs.tenuto then dur = dur + get.jp_mods.tenuto end
+    if buffs['clarion call'] then dur = dur + get.jp_mods.clarion end
+    return dur
 end
 
 function song_timers.duration(song_name, buffs)

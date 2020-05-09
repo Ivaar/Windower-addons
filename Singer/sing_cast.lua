@@ -36,16 +36,16 @@ function cast.check_song(song_list,targ,buffs,spell_recasts,recasts,JA_WS_lock,r
             (buffs.troubadour and not timers[targ][song.enl].nt) or
             (buffs['soul voice'] and not timers[targ][song.enl].sv)) then
 
-            if settings.nightingale and not JA_WS_lock and not buffs.nightingale and recasts[109] <= 0 and recasts[110] <= 0 then
+            if ta == '<me>' and settings.nightingale and not JA_WS_lock and not buffs.nightingale and recasts[109] <= 0 and recasts[110] <= 0 then
                 cast.JA('input /ja "Nightingale" <me>')
-            elseif settings.troubadour and not JA_WS_lock and not buffs.troubadour and recasts[110] <= 0 then
+            elseif ta == '<me>' and settings.troubadour and not JA_WS_lock and not buffs.troubadour and recasts[110] <= 0 then
                 for targ, songs in pairs(timers) do
                     for song in pairs(songs) do
                         timers[targ][song].nt = false
                     end
                 end
                 cast.JA('input /ja "Troubadour" <me>')
-            elseif not JA_WS_lock and song.enl == settings.marcato and not buffs.marcato and not buffs['soul voice'] and recasts[48] <= 0 then
+            elseif ta == '<me>' and not JA_WS_lock and song.enl == settings.marcato and not buffs.marcato and not buffs['soul voice'] and recasts[48] <= 0 then
                 cast.JA('input /ja "Marcato" <me>')
             elseif ta ~= '<me>' and not buffs.pianissimo then 
                 if not JA_WS_lock and recasts[112] <= 0 then
