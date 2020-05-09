@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.05.09'
+_addon.version = '1.20.05.09.2'
 
 require('luau')
 require('pack')
@@ -59,13 +59,16 @@ setting = {
 
 local file_path = windower.addon_path..'data/settings.lua'
 
+
 function table_tostring(tab, padding) 
     local str = ''
     for k, v in pairs(tab) do
         if class(v) == 'List' then
             str = str .. '':rpad(' ', padding) .. '%s = L{':format(k) .. table_tostring(v, padding+4) .. '},\n'
-        elseif type == 'table' then
-            str = str .. '':rpad(' ', padding) .. '%s = %s{\n':format(k, class(v) == 'Table' and 'T' or '') .. table_tostring(v, padding+4) .. '':rpad(' ', padding) .. '},\n'
+        elseif class(v) == 'Table' then
+            str = str .. '':rpad(' ', padding) .. '%s = T{\n':format(k) .. table_tostring(v, padding+4) .. '':rpad(' ', padding) .. '},\n'
+        elseif class(v) == 'table' then
+            str = str .. '':rpad(' ', padding) .. '%s = {\n':format(k) .. table_tostring(v, padding+4) .. '':rpad(' ', padding) .. '},\n'
         elseif class(v) == 'string' then
             str = str .. '"%s",':format(v)
         end
