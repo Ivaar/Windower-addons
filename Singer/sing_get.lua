@@ -22,6 +22,8 @@ get.songs = {
     dirge = {'Adventurer\'s Dirge'},
     scherzo = {'Sentinel\'s Scherzo'},
     carol = {'Light Carol','Light Carol II'},
+    etude = {'Herculean Etude','Sinewy Etude'},
+    
     setude = {'Herculean Etude','Sinewy Etude'},
     detude = {'Uncanny Etude','Dextrous Etude'},
     vetude = {'Vital Etude','Vivacious Etude'},
@@ -37,10 +39,10 @@ get.songs = {
     acarol = {'Water Carol','Water Carol II'},
     lcarol = {'Light Carol','Light Carol II'},
     dcarol = {'Dark Carol','Dark Carol II'},
-    }
+}
 
 get.debuffs = {
-    lullaby = {'Horde Lullaby II','Horde Lullaby','Foe Lullaby','Foe Lullaby II'},
+    lullaby = {'Horde Lullaby II','Horde Lullaby','Foe Lullaby II','Foe Lullaby'},
     elegy = {'Carnage Elegy'},
     nocturne = {'Pining Nocturne'},
     threnody = {
@@ -55,25 +57,35 @@ get.debuffs = {
     }
 }
 
---[[
-local carol_songs = {
-    fire = {'Fire Carol','Fire Carol II'},
-    ice = {'Ice Carol','Ice Carol II'},
-    wind = {'Wind Carol','Wind Carol II'},
-    earth = {'Earth Carol','Earth Carol II'},
-    lightning = {'Lightning Carol','Lightning Carol II'},
-    water = {'Water Carol','Water Carol II'},
-    light = {'Light Carol','Light Carol II'},
-    dark = {'Dark Carol','Dark Carol II'}
-    }
+local ext_songs = {
+    etude = {
+        str = {'Herculean Etude','Sinewy Etude'},
+        dex = {'Uncanny Etude','Dextrous Etude'},
+        vit = {'Vital Etude','Vivacious Etude'},
+        agi = {'Swift Etude','Quick Etude'},
+        int = {'Sage Etude','Learned Etude'},
+        mnd = {'Logical Etude','Spirited Etude'},
+        chr = {'Bewitching Etude','Enchanting Etude'},
+    },
+    carol = {
+        fire = {'Fire Carol','Fire Carol II'},
+        ice = {'Ice Carol','Ice Carol II'},
+        wind = {'Wind Carol','Wind Carol II'},
+        earth = {'Earth Carol','Earth Carol II'},
+        lightning = {'Lightning Carol','Lightning Carol II'},
+        water = {'Water Carol','Water Carol II'},
+        light = {'Light Carol','Light Carol II'},
+        dark = {'Dark Carol','Dark Carol II'},
+    },
+}
 
-function set_carol(ele)
-    if carol_songs[ele] then
-        get.songs.carol = carol_songs[ele]
+function set_ext_songs(type, atr)
+    if ext_songs[type] and ext_songs[type][atr] then
+        get.songs[type] = ext_songs[type][atr]
         return true
     end
+    return false
 end
-]]
 
 local song = {
     [368] = 'Foe Requiem',
@@ -310,6 +322,7 @@ function get.spell(name)
 end
 
 function get.song_by_name(name)
+    if not name then return end
     name = string.lower(name)
     for k,v in pairs(song) do
         if k ~= 'n' and string.lower(v) == name then
