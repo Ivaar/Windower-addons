@@ -367,7 +367,7 @@ end
 
 function get.valid_target(name, distance)
     for ind, member in pairs(windower.ffxi.get_party()) do
-        if type(member) == 'table' and member.mob and member.mob.name:lower() == name then
+        if type(member) == 'table' and member.mob and member.mob.name == name then
             return is_valid_target(member.mob, distance)
         end
     end
@@ -391,7 +391,7 @@ function get.party_member_slot(name)
     local party = windower.ffxi.get_party()
 
     for slot in get.party_slots:it() do
-        if party[slot] and party[slot].name:lower() == name then
+        if party[slot] and party[slot].name == name then
             return slot
         end
     end

@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.05.09.2'
+_addon.version = '1.20.05.09.12'
 
 require('luau')
 require('pack')
@@ -117,7 +117,7 @@ local display_box = function()
     str = str..colorize(3, '\n Nightingale:[%s]':format(settings.nightingale and 'On' or 'Off'))
     str = str..colorize(4, '\n Troubadour:[%s]':format(settings.troubadour and 'On' or 'Off'))
     str = str..colorize(5, '\n Pianissimo:[%s]':format(settings.pianissimo and 'On' or 'Off'))
-    str = str..colorize(6, '\n Debuffing:[%s]':format(setting.debuffing and 'On' or 'Off'))
+    str = str..colorize(6, '\n Debuffing:[%s]':format(settings.debuffing and 'On' or 'Off'))
     str = str..colorize(7, '\n AoE: [%s]':format(settings.aoe.party and 'On' or 'Off'))
 
     local party = windower.ffxi.get_party()
@@ -211,7 +211,7 @@ function do_stuff()
 
         local spell_recasts = windower.ffxi.get_spell_recasts()
         local ability_recasts = windower.ffxi.get_ability_recasts()
-        local recast = math.random(settings.recast.song.min,settings.recast.song.max)+math.random()
+        local recast = settings.recast.song.min
 
         for k, v in pairs(timers) do
             song_timers.update(k)
@@ -225,7 +225,7 @@ function do_stuff()
 
         if settings.pianissimo then
             for targ, songs in pairs(setting.song) do
-                if get.valid_target(targ:lower(), 20) then
+                if get.valid_target(targ, 20) then
                     if cast.check_song(songs,targ,buffs,spell_recasts,ability_recasts,JA_WS_lock,recast) then
                         return
                     end
@@ -237,7 +237,7 @@ function do_stuff()
         for key,targets in pairs(setting.buffs) do
             local spell = get.spell(key)
             for k,targ in ipairs(targets) do
-                if targ and spell and spell_recasts[spell.id] <= 0 and get.valid_target(targ:lower(), 20) and play.vitals.mp >= 40 and
+                if targ and spell and spell_recasts[spell.id] <= 0 and get.valid_target(targ, 20) and play.vitals.mp >= 40 and
                 (not timers.buffs or not timers.buffs[spell.enl] or not timers.buffs[spell.enl][targ] or 
                 os.time() - timers.buffs[spell.enl][targ]+recast > 0) then
                     cast.MA(spell.enl,targ)
@@ -245,12 +245,12 @@ function do_stuff()
                 end
             end
         end
-        if setting.debuffing then
+
+        if settings.debuffing then
             local targ = windower.ffxi.get_mob_by_target('bt')
 
-            if targ and targ.hpp > 0 and targ.valid_target and targ.distance < 20 then
+            if targ and targ.hpp > 0 and targ.valid_target and targ.distance:sqrt() < 20 then
                 for song in setting.debuffs:it() do
-                    print(song)
                     local effect
                     for k,v in pairs(get.debuffs) do
                         if table.find(v, song) then
@@ -309,8 +309,7 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
 
             if song then
                 local buff_id = packet['Target 1 Action 1 Param']
-                if song_buffs[buff_id] and (not settings.aoe.party or packet['Target Count'] > 1 and get.aoe_range()) then
-                --if song_buffs[buff_id] and packet['Target Count'] > 1 and packet['Target 1 ID'] == packet['Actor'] and get.aoe_range() then
+                if song_buffs[buff_id] and packet['Target Count'] > 1 and (not settings.aoe.party or get.aoe_range()) then
                     song_timers.adjust(song,'AoE',buffs)
                 end
                 for x = 1, packet['Target Count'] do
@@ -443,7 +442,7 @@ windower.register_event('addon command', function(...)
     elseif commands[1] == 'aoe' and commands[2] then
         local command = handled_commands.aoe[commands[#commands]]
         local slot = tonumber(commands[2], 6, 0) or commands[2]:match('[1-5]')
-        slot = slot and 'p' .. slot or get.party_member_slot(commands[2])
+        slot = slot and 'p' .. slot or get.party_member_slot(commands[2]:ucfirst())
 
         if not slot then
             if command and not commands[3] then
