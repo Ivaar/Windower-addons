@@ -21,9 +21,8 @@ get.songs = {
     sirvente = {'Foe Sirvente'},
     dirge = {'Adventurer\'s Dirge'},
     scherzo = {'Sentinel\'s Scherzo'},
-    carol = {'Light Carol','Light Carol II'},
-    etude = {'Herculean Etude','Sinewy Etude'},
-    
+    carol = {},
+    etude = {},
     setude = {'Herculean Etude','Sinewy Etude'},
     detude = {'Uncanny Etude','Dextrous Etude'},
     vetude = {'Vital Etude','Vivacious Etude'},
@@ -79,10 +78,15 @@ local ext_songs = {
     },
 }
 
-function set_ext_songs(type, atr)
+for buff, tab in pairs(ext_songs) do
+    for _, song in ipairs(tab) do
+        get.songs[buff][#get.songs[buff]+1] = song
+    end
+end
+
+function get.ext_songs(type, atr)
     if ext_songs[type] and ext_songs[type][atr] then
-        get.songs[type] = ext_songs[type][atr]
-        return true
+        return ext_songs[type][atr]
     end
     return false
 end

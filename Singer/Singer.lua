@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.05.10'
+_addon.version = '1.20.05.11'
 
 require('luau')
 require('pack')
@@ -14,6 +14,7 @@ cast = require('sing_cast')
 song_timers = require('song_timers')
 
 default = {
+    interval = 0.1,
     delay=4,
     marcato='Sentinel\'s Scherzo',
     soul_voice=false,
@@ -34,71 +35,74 @@ default = {
 
 settings = config.load(default)
 
-del = 0
-counter = 0
-interval = 0.1
-timers = {AoE={}, buffs={}}
-last_coords = 'fff':pack(0,0,0)
-buffs = get.buffs()
-times = {}
-debuffed = {}
-
-setting = {
+setting = T{
     buffs = T{
         haste = L{},
         refresh = L{},
         firestorm = L{},
         aurorastorm = L{},
     },
+    debuffs = L{},
     debuffs = L{"Carnage Elegy","Pining Nocturne",},
     dummy = L{"Knight's Minne","Knight's Minne II",},
     songs = L{"Advancing March","Victory March","Blade Madrigal","Sword Madrigal","Valor Minuet V",},
-    song = {
+    song = {},
+    playlist = T{
+        clear = L{}
     },
 }
 
-local file_path = windower.addon_path..'data/settings.lua'
-
-
-function table_tostring(tab, padding) 
-    local str = ''
-    for k, v in pairs(tab) do
-        if class(v) == 'List' then
-            str = str .. '':rpad(' ', padding) .. '%s = L{':format(k) .. table_tostring(v, padding+4) .. '},\n'
-        elseif class(v) == 'Table' then
-            str = str .. '':rpad(' ', padding) .. '%s = T{\n':format(k) .. table_tostring(v, padding+4) .. '':rpad(' ', padding) .. '},\n'
-        elseif class(v) == 'table' then
-            str = str .. '':rpad(' ', padding) .. '%s = {\n':format(k) .. table_tostring(v, padding+4) .. '':rpad(' ', padding) .. '},\n'
-        elseif class(v) == 'string' then
-            str = str .. '"%s",':format(v)
-        end
-    end
-    return str
-end
-
-function save_file()
-    local make_file = io.open(file_path, 'w')
-    
-    local str = table_tostring(setting, 4)
-
-    make_file:write('return {\n' .. str .. '}\n')
-    make_file:close()
-end
-
-if windower.file_exists(file_path) then
-    setting = dofile(file_path)
-else
-    save_file()
-    notice('New file: data/settings.lua')
-end
+local save_file
 
 do
+    local file_path = windower.addon_path..'data/settings.lua'
+    local table_tostring
+
+    table_tostring = function(tab, padding) 
+        local str = ''
+        for k, v in pairs(tab) do
+            if class(v) == 'List' then
+                str = str .. '':rpad(' ', padding) .. '%s = L{':format(k) .. table_tostring(v, padding+4) .. '},\n'
+            elseif class(v) == 'Table' then
+                str = str .. '':rpad(' ', padding) .. '%s = T{\n':format(k) .. table_tostring(v, padding+4) .. '':rpad(' ', padding) .. '},\n'
+            elseif class(v) == 'table' then
+                str = str .. '':rpad(' ', padding) .. '%s = {\n':format(k) .. table_tostring(v, padding+4) .. '':rpad(' ', padding) .. '},\n'
+            elseif class(v) == 'string' then
+                str = str .. '"%s",':format(v)
+            end
+        end
+        return str
+    end
+
+    save_file = function()
+        local make_file = io.open(file_path, 'w')
+        
+        local str = table_tostring(setting, 4)
+
+        make_file:write('return {\n' .. str .. '}\n')
+        make_file:close()
+    end
+
+    if windower.file_exists(file_path) then
+        setting = setting:update(dofile(file_path))
+    else
+        save_file()
+        notice('New file: data/settings.lua')
+    end
+
     local time = os.time()
     local vana_time = time - 1009810800
 
     bufftime_offset = math.floor(time - (vana_time * 60 % 0x100000000) / 60)
 end
 
+del = 0
+counter = 0
+timers = {AoE={}, buffs={}}
+last_coords = 'fff':pack(0,0,0)
+buffs = get.buffs()
+times = {}
+debuffed = {}
 color = {}
 
 function colorize(row, str)
@@ -178,10 +182,10 @@ bard_status:show()
 function do_stuff()
     bard_status:text(display_box())
     if not settings.actions then return end
-    counter = counter + interval
+    counter = counter + settings.interval
     if counter >= del then
         counter = 0
-        del = interval
+        del = settings.interval
         local play = windower.ffxi.get_player()
 
         if not play or play.main_job ~= 'BRD' or (play.status ~= 1 and play.status ~= 0) then return end
@@ -269,7 +273,7 @@ function do_stuff()
     end
 end
 
-do_stuff:loop(interval)
+do_stuff:loop(settings.interval)
 
 start_categories = S{7,9}
 finish_categories = S{3,5}
@@ -307,24 +311,20 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
 
             local song = get.song_name(packet['Param'])
 
-            if song then
-                local buff_id = packet['Target 1 Action 1 Param']
-                if song_buffs[buff_id] and packet['Target Count'] > 1 and (not settings.aoe.party or get.aoe_range()) then
-                    song_timers.adjust(song,'AoE',buffs)
-                end
-                for x = 1, packet['Target Count'] do
-                    local buff_id = packet['Target '..x..' Action 1 Param']
-                    if buff_id ~= 0 then
-                        local targ = windower.ffxi.get_mob_by_id(packet['Target '..x..' ID'])
+            if not song then return end
 
-                        if song_buffs[buff_id] then
-                            song_timers.adjust(song,targ.name,buffs)
-                        elseif song_debuffs[buff_id] then
-                            local effect = song_debuffs[buff_id]
-                            debuffed[targ.id] = debuffed[targ.id] or {}
-                            debuffed[targ.id][effect] = true
-                        end
-                    end
+            local buff_id = packet['Target 1 Action 1 Param']
+            if song_buffs[buff_id] and packet['Target Count'] > 1 and (not settings.aoe.party or get.aoe_range()) then
+                song_timers.adjust(song, 'AoE', buffs)
+            end
+            for x = 1, packet['Target Count'] do
+                local buff_id = packet['Target '..x..' Action 1 Param']
+                if song_buffs[buff_id] then
+                    song_timers.adjust(song, windower.ffxi.get_mob_by_id(packet['Target '..x..' ID']).name, buffs)
+                elseif song_debuffs[buff_id] then
+                    local effect = song_debuffs[buff_id]
+                    debuffed[targ] = debuffed[targ.id] or {}
+                    debuffed[targ][effect] = true
                 end
             end
         elseif finish_categories:contains(packet['Category']) then
@@ -332,6 +332,7 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
         elseif start_categories:contains(packet['Category']) then
             is_casting = true
         end
+
     elseif id == 0x029 then
         local packet = packets.parse('incoming', original)
 
@@ -340,7 +341,9 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
         elseif buff_lost_messages:contains(packet.Message) and packet['Actor'] == get.player_id then
             song_timers.buff_lost(packet['Target'],packet['Param 1']) 
         end
+
     elseif id == 0x63 and original:byte(5) == 9 then
+        -- appears # of copies are not checked anymore and times may only ever be used for afermath, I keep forgetting we dont getno party buff timers
         local set_buff = {}
         local set_time = {}
         for n=1,32 do
@@ -358,6 +361,7 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
         end
         buffs = set_buff
         times = set_time
+
     elseif id == 0x00A then
         local packet = packets.parse('incoming', original)
 
@@ -398,13 +402,20 @@ short_commands = {
     ['p'] = 'pianissimo',
     ['n'] = 'nightingale',
     ['t'] = 'troubadour',
+    ['play'] = 'playlist',
 }
 
+function resolve_song(commands)
+    local x = tonumber(commands[#commands], 7)
+
+    if x then commands[#commands] = {'I','II','III','IV','V','VI'}[x] end
+
+    return get.song_by_name(table.concat(commands, ' ',2))
+end
+
 windower.register_event('addon command', function(...)
-    local commands = T{...}
-    
-    for x=1,#commands do commands[x] = windower.convert_auto_trans(commands[x]):lower() end
-    
+    local commands = T(arg):map(windower.convert_auto_trans .. string.lower)
+
     commands[1] = short_commands[commands[1]] or commands[1]
     
     if commands[1] == 'actions' then
@@ -429,19 +440,57 @@ windower.register_event('addon command', function(...)
         settings:save('all')
         save_file()
         addon_message('settings Saved.')
+    elseif commands[1] == 'playlist' then
+        if commands[2] == 'save' then
+            local song_list
+
+            if not commands[3] or commands[3] == 'clear' then
+                return
+            elseif commands[4] then
+                song_list = setting.song[commands[4]:ucfirst()]
+            else
+                song_list = setting.songs
+            end
+
+            if song_list and not song_list:empty() then
+                setting.playlist[commands[3]] = song_list:copy()
+                save_file()
+                addon_message('Playlist set: "%s" %s':format(commands[3], song_list:tostring())) 
+            end
+        elseif setting.playlist:containskey(commands[2]) then
+            local song_list = setting.playlist[commands[2]]
+            local name = commands[3] and commands[3]:ucfirst()
+            
+            if name then
+                setting.song[name] = song_list:copy()
+            else
+                setting.songs = song_list:copy()
+            end
+            addon_message('%s: %s':format(name or 'AoE', song_list:tostring()))
+        else
+            addon_message('Playlist not found: %s':format(commands[2]))
+        end
     elseif tonumber(commands[1], 6) and commands[2] then
-        local x = tonumber(commands[#commands], 7)
+        local name = commands[#commands]:ucfirst()
 
-        if x then commands[#commands] = {'I','II','III','IV','V','VI'}[x] end
+        if get.party_member_slot(name) then
+            commands:remove(#commands)
+        else
+            name = nil
+        end
 
-        local song = get.song_by_name(table.concat(commands, ' ',2))
+        local song = resolve_song(commands)
 
-        if song then
+        if not song then
+
+        elseif name then
+            setting.songs[tonumber(commands[1])][name] = song.enl
+        else
             setting.songs[tonumber(commands[1])] = song.enl
         end
     elseif commands[1] == 'aoe' and commands[2] then
         local command = handled_commands.aoe[commands[#commands]]
-        local slot = tonumber(commands[2], 6, 0) or commands[2]:match('[1-5]')
+        local slot = tonumber(commands[2], 6) or commands[2]:match('[1-5]')
         slot = slot and 'p' .. slot or get.party_member_slot(commands[2]:ucfirst())
 
         if not slot then
@@ -495,7 +544,7 @@ windower.register_event('addon command', function(...)
             return
         end
 
-        local song = get.song_by_name(table.concat(commands, ' ',2))
+        local song = resolve_song(commands)
 
         if song then
             setting.dummy[ind] = song.enl
@@ -517,26 +566,29 @@ windower.register_event('addon command', function(...)
             addon_message('Already buffing %s with %s':format(name, commands[1]:ucfirst()))
         end
     elseif get.songs[commands[1]] and commands[2] then
+        local songs = get.ext_songs(commands[1], commands[2])
 
-        if set_ext_songs(commands[1], commands[2]) then
+        if songs then
             commands:remove(2)
-            commands[2] = tonumber(commands[2])
+        else
+            songs = get.songs[commands[1]]
         end
 
-        local n = tonumber({off=0}[commands[2]] or commands[2] or 1)
-        local buff = commands[1]
-        local name = commands[3]
-        local songs = get.songs[buff]
-        local song_list
-        if name then
-            name = name:ucfirst()
+        local name = commands[#commands]:ucfirst()
+
+        if get.party_member_slot(name) then
+            commands:remove(#commands)
             setting.song[name] = setting.song[name] or L{}
+        else
+            name = nil
         end
 
-        song_list = setting.song[name] or setting.songs 
+        local song_list = setting.song[name] or setting.songs
+        local n = tonumber({off=0}[commands[2]] or commands[2] or 1)
 
         if #songs < n then
-            addon_message('Error: %d exceeds the maximum value for %s.':format(n,commands[1]))
+            addon_message('Error: %d exceeds the maximum value for %s.':format(n, commands[1]))
+            return
         elseif n == 0 then
             for x = #songs, 1, -1 do
                 local song = table.find(song_list, songs[x])
@@ -557,26 +609,28 @@ windower.register_event('addon command', function(...)
                 end
             end
         end
+
         if name and song_list:empty() then
             setting.song[name] = nil
-        else
-            addon_message('%s: %s':format(name or 'AoE', song_list:tostring()))
         end
+        addon_message('%s: %s':format(name or 'AoE', song_list:tostring()))
     elseif commands[1] == 'debuff' and commands[2] then
-        local debuff = get.song_by_name(table.concat(commands, ' ',2))
+        local debuff = resolve_song(commands)
 
         if not debuff then
             return
         end
 
         local ind = setting.debuffs:find(debuff.enl)
+
         if ind then
             setting.debuffs:remove(ind)
         else
             setting.debuffs:append(debuff.enl)
         end
     elseif type(default[commands[1]]) == 'string' and commands[2] then
-        local song = get.song_by_name(table.concat(commands, ' ',2))
+        local song = resolve_song(commands)
+
         if song then
             settings[commands[1]] = song.enl
             addon_message('%s is now set to %s':format(commands[1],song.enl))

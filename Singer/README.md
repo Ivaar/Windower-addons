@@ -12,26 +12,28 @@ when typing commands don't use "[ ]"  "< >" or "|".
 
 Accepts auto-translated terms.
 
-	//sing [on|off]                 -  Turn actions on/off.
-	//sing actions [on|off]         -  Same as above.
-	//sing active [on|off]          -  Display active settings in text box
-	//sing timers [on|off]          -  Dislay custom song timers.
-	//sing haste <name> [on|off]    -  Add or remove names of players for Haste cycle.
-	//sing refresh <name> [on|off]  -  Add or remove names of players for Refresh cycle.
-	//sing pianissimo [on|off]      -  Toggle pianissimo usage, can be shortened to p.
-	//sing nightingale [on|off]     -  Toggle nightingale usage, can be shortened to n.
-	//sing troubadour [on|off]      -  Toggle troubadour usage, can be shortened to t.
-	//sing delay <n>                -  [n] second delay between song casting.
-	//sing recast song <min> <max>  -  Begin recasting songs between <min> and <max> seconds before they wear.
-	//sing recast buff <min> <max>  -  Same as the above for haste and refresh.
-    //sing <buff> <n>               -  Set aoe buff song to x[n] or off.*
-	//sing <buff> <n> [name]        -  Set pianissimo song type to x[n] or off for [name].*
-	//sing marcato <song>           -  Set song to use following marcato.**
-	//sing dummy [n] <song>         -  Set dummy songs, ignored if you do not own the proper equipment.**
-	//sing aoe <slot|name> [on|off] -  Set party slots to monitor for aoe range.
-	//sing save                     -  Save settings.
-	//sing reset                    -  Reset song timers.
-	//sing <priority> <song> [name] -  Set songs to be used in specified order.**
+	//sing [on|off]                     -  Turn actions on/off.
+	//sing actions [on|off]             -  Same as above.
+	//sing active [on|off]              -  Display active settings in text box
+	//sing timers [on|off]              -  Dislay custom song timers.
+	//sing haste <name> [on|off]        -  Add or remove names of players for Haste cycle.
+	//sing refresh <name> [on|off]      -  Add or remove names of players for Refresh cycle.
+	//sing pianissimo [on|off]          -  Toggle pianissimo usage, can be shortened to p.
+	//sing nightingale [on|off]         -  Toggle nightingale usage, can be shortened to n.
+	//sing troubadour [on|off]          -  Toggle troubadour usage, can be shortened to t.
+	//sing delay <n>                    -  [n] second delay between song casting.
+	//sing recast song <min> <max>      -  Begin recasting songs between <min> and <max> seconds before they wear.
+	//sing recast buff <min> <max>      -  Same as the above for haste and refresh.
+    //sing <buff> <n>                   -  Set aoe buff song to x[n] or off.*
+	//sing <buff> <n> [name]            -  Set pianissimo song type to x[n] or off for [name].*
+	//sing marcato <song>               -  Set song to use following marcato.**
+	//sing dummy [n] <song>             -  Set dummy songs, ignored if you do not own the proper equipment.**
+	//sing aoe <slot|name> [on|off]     -  Set party slots to monitor for aoe range.
+	//sing save                         -  Save settings.
+	//sing reset                        -  Reset song timers.
+	//sing <priority> <song> [name]     -  Set songs to be used in specified order.**
+	//sing playlist save <list> [name]  -  Saves current songs to playlist.
+	//sing playlist <list|clear> [name] -  Loads songs from a previously set playlist.
 
 To configure songs use:
 	
