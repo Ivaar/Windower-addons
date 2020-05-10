@@ -33,7 +33,7 @@ Accepts auto-translated terms.
 	//sing reset                        -  Reset song timers.
 	//sing <priority> <song> [name]     -  Set songs to be used in specified order.**
 	//sing playlist save <list> [name]  -  Saves current songs to playlist.
-	//sing playlist <list|clear> [name] -  Loads songs from a previously set playlist.
+	//sing playlist <list|clear> [name] -  Loads songs from a previously set playlist. (clear is an empty playlist to remove all songs)
 
 To configure songs use:
 	
