@@ -79,8 +79,9 @@ local ext_songs = {
 }
 
 for buff, tab in pairs(ext_songs) do
-    for _, song in ipairs(tab) do
-        get.songs[buff][#get.songs[buff]+1] = song
+    for _, songs in pairs(tab) do
+        get.songs[buff][#get.songs[buff]+1] = songs[1]
+        get.songs[buff][#get.songs[buff]+1] = songs[2]
     end
 end
 
