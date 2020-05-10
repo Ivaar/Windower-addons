@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.05.11'
+_addon.version = '1.20.05.11.1'
 
 require('luau')
 require('pack')
@@ -395,7 +395,8 @@ handled_commands = T{
         ['-'] = 'off',
         ['ignore'] = 'off',
     },
-    recast = S{'buff','song'}
+    recast = S{'buff','song'},
+    clear = S{'remove','clear'},
 }
 
 short_commands = {
@@ -404,6 +405,20 @@ short_commands = {
     ['t'] = 'troubadour',
     ['play'] = 'playlist',
 }
+
+local function save_playlist(commands)
+    if not commands[2] or commands[2] == 'clear' then
+        return false
+    end
+
+    local song_list = setting.song[commands[3] and commands[3]:ucfirst()] or setting.songs
+
+    if song_list and not song_list:empty() then
+        setting.playlist[commands[2]] = song_list:copy()
+        addon_message('Playlist set: "%s" %s':format(commands[2], song_list:tostring())) 
+        return true
+    end
+end
 
 function resolve_song(commands)
     local x = tonumber(commands[#commands], 7)
@@ -437,30 +452,23 @@ windower.register_event('addon command', function(...)
         end
         addon_message('Actions %s':format(settings.actions and 'On' or 'Off'))
     elseif commands[1] == 'save' then
-        settings:save('all')
+        if not commands[2] then
+            settings:save('all')
+            addon_message('settings Saved.')
+        elseif not save_playlist(commands) then
+           return
+        end
         save_file()
-        addon_message('settings Saved.')
     elseif commands[1] == 'playlist' then
         if commands[2] == 'save' then
-            local song_list
-
-            if not commands[3] or commands[3] == 'clear' then
-                return
-            elseif commands[4] then
-                song_list = setting.song[commands[4]:ucfirst()]
-            else
-                song_list = setting.songs
-            end
-
-            if song_list and not song_list:empty() then
-                setting.playlist[commands[3]] = song_list:copy()
+            commands:remove(1)
+            if save_playlist(commands) then
                 save_file()
-                addon_message('Playlist set: "%s" %s':format(commands[3], song_list:tostring())) 
             end
         elseif setting.playlist:containskey(commands[2]) then
             local song_list = setting.playlist[commands[2]]
             local name = commands[3] and commands[3]:ucfirst()
-            
+
             if name then
                 setting.song[name] = song_list:copy()
             else
@@ -472,6 +480,7 @@ windower.register_event('addon command', function(...)
         end
     elseif tonumber(commands[1], 6) and commands[2] then
         local name = commands[#commands]:ucfirst()
+        local ind = tonumber(commands[1])
 
         if get.party_member_slot(name) then
             commands:remove(#commands)
@@ -479,14 +488,25 @@ windower.register_event('addon command', function(...)
             name = nil
         end
 
-        local song = resolve_song(commands)
-
-        if not song then
-
-        elseif name then
-            setting.songs[tonumber(commands[1])][name] = song.enl
+        if handled_commands.clear:contains(commands[2]) then
+            if not name then
+                setting.songs:remove(ind)
+            elseif setting.song[name] then
+                setting.song[name]:remove(ind)
+                if setting.song[name]:empty() then
+                    setting.song[name] = nil
+                end
+            end
         else
-            setting.songs[tonumber(commands[1])] = song.enl
+            local song = resolve_song(commands)
+
+            if not song then
+            elseif name then
+                setting.song[name] = setting.song[name] or L{}
+                setting.song[name][slot] = song.enl
+            else
+                setting.songs[slot] = song.enl
+            end
         end
     elseif commands[1] == 'aoe' and commands[2] then
         local command = handled_commands.aoe[commands[#commands]]

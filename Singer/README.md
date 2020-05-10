@@ -29,9 +29,10 @@ Accepts auto-translated terms.
 	//sing marcato <song>               -  Set song to use following marcato.**
 	//sing dummy [n] <song>             -  Set dummy songs, ignored if you do not own the proper equipment.**
 	//sing aoe <slot|name> [on|off]     -  Set party slots to monitor for aoe range.
-	//sing save                         -  Save settings.
+	//sing save [list] [name]           -  Save settings, if <list> is provided will save current songs to playlist.
 	//sing reset                        -  Reset song timers.
-	//sing <priority> <song> [name]     -  Set songs to be used in specified order.**
+	//sing <song_slot> <song> [name]    -  Set songs to be used in specified order.**
+	//sing <song_slot> <clear> [name]   -  Remove song from specified slot.
 	//sing playlist save <list> [name]  -  Saves current songs to playlist.
 	//sing playlist <list|clear> [name] -  Loads songs from a previously set playlist. (clear is an empty playlist to remove all songs)
 
