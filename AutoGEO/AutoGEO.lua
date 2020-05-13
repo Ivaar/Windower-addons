@@ -33,7 +33,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'AutoGEO','geo'}
 _addon.name = 'AutoGEO'
-_addon.version = '1.2020.03.20'
+_addon.version = '1.2020.05.11'
 
 require('luau')
 texts = require('texts')
@@ -41,7 +41,7 @@ packets = require('packets')
 
 default = {
     delay = 4.2,
-    actions = false,
+    start_on_load = false,
     active = true,
     geo = 'Geo\-Precision',
     indi = 'Indi\-Precision',
@@ -55,6 +55,7 @@ default = {
     }
 
 settings = config.load(default)
+actions = settings.start_on_load
 last_coords = 'fff':pack(0,0,0)
 is_moving = false
 nexttime = os.clock()
@@ -139,7 +140,7 @@ spell_ids = L{
 
 display_box = function()
     local str
-    if settings.actions then
+    if actions then
         str = ' AutoGEO [On] '
     else
         str = ' AutoGEO [Off] '
@@ -167,7 +168,7 @@ end
 geo_status = texts.new(display_box(),settings.text,settings)
 
 function prerender()
-    if not settings.actions then return end
+    if not actions then return end
     local curtime = os.clock()
     if nexttime + del <= curtime then
         nexttime = curtime
@@ -257,9 +258,9 @@ function addon_command(...)
             if not user_events then
                 check_job()
             end
-            settings.actions = true
+            actions = true
         elseif commands[1] == 'off' then
-            settings.actions = false
+            actions = false
         elseif commands[1] == 'entrust' and commands[2] then
             if commands[3] then
                 local spell = geo_spells:with('en','Indi\-'..commands[3]:ucfirst())
@@ -368,9 +369,9 @@ function check_incoming_chunk(id,original,modified,injected,blocked)
                 local mult = 1
                 local dur = 180 + windower.ffxi.get_player().job_points.geo.indocolure_spell_effect_dur * 2
                 if get_equip('legs') == 'Bagua Pants +1' then dur = dur + 20 end
-                if get_equip('legs') == 'Bagua Pants' then dur = dur + 12 end
-                if get_equip('legs') == 'Azimuth Gaiters' then dur = dur + 15 end
-                if get_equip('legs') == 'Azimuth Gaiters +1' then dur = dur + 20 end
+                elseif get_equip('legs') == 'Bagua Pants' then dur = dur + 12 end
+                if get_equip('feet') == 'Azimuth Gaiters' then dur = dur + 15 end
+                elseif get_equip('legs') == 'Azimuth Gaiters +1' then dur = dur + 20 end
                 if get_equip('back') == 'Lifestream Cape' then mult = mult + settings.aug.lifestream * 0.01 end
                 dur = math.floor(mult*dur)
                 if packet.Actor == packet['Target 1 ID'] then
@@ -408,7 +409,7 @@ function check_outgoing_chunk(id,data,modified,is_injected,is_blocked)
 end
 
 function reset()
-    settings.actions = false
+    actions = false
     is_casting = false
     timers = {entrust={},haste={},refresh={}}
     geo_status:text(display_box())
