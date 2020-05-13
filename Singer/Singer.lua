@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.05.11.1'
+_addon.version = '1.20.05.12'
 
 require('luau')
 require('pack')
@@ -503,14 +503,14 @@ windower.register_event('addon command', function(...)
             if not song then
             elseif name then
                 setting.song[name] = setting.song[name] or L{}
-                setting.song[name][slot] = song.enl
+                setting.song[name][ind] = song.enl
             else
-                setting.songs[slot] = song.enl
+                setting.songs[ind] = song.enl
             end
         end
     elseif commands[1] == 'aoe' and commands[2] then
         local command = handled_commands.aoe[commands[#commands]]
-        local slot = tonumber(commands[2], 6) or commands[2]:match('[1-5]')
+        local slot = commands[2]:match('[1-5]')
         slot = slot and 'p' .. slot or get.party_member_slot(commands[2]:ucfirst())
 
         if not slot then
@@ -594,6 +594,8 @@ windower.register_event('addon command', function(...)
             songs = get.songs[commands[1]]
         end
 
+        commands:remove(1)
+
         local name = commands[#commands]:ucfirst()
 
         if get.party_member_slot(name) then
@@ -604,9 +606,12 @@ windower.register_event('addon command', function(...)
         end
 
         local song_list = setting.song[name] or setting.songs
-        local n = tonumber({off=0}[commands[2]] or commands[2] or 1)
+        local n = commands[#commands]
+        local n = tonumber({off=0}[n] or n or 1)
 
-        if #songs < n then
+        if not n then
+            return
+        elseif #songs < n then
             addon_message('Error: %d exceeds the maximum value for %s.':format(n, commands[1]))
             return
         elseif n == 0 then
@@ -618,19 +623,19 @@ windower.register_event('addon command', function(...)
                 end
             end
         else
-            for x = n, 1, -1 do
+            for x = 1, n do
                 local song = songs[x]
 
                 if not table.find(song_list, song) then
                     if #song_list >= 5 then
-                        song_list:remove(1)
+                        song_list:remove(5)
                     end
-                    song_list:append(song)
+                    song_list:insert(1, song)
                 end
             end
         end
 
-        if name and song_list:empty() then
+        if song_list:empty() then
             setting.song[name] = nil
         end
         addon_message('%s: %s':format(name or 'AoE', song_list:tostring()))
