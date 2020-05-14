@@ -86,10 +86,9 @@ for buff, tab in pairs(ext_songs) do
 end
 
 function get.ext_songs(type, atr)
-    if ext_songs[type] and ext_songs[type][atr] then
+    if ext_songs[type] then
         return ext_songs[type][atr]
     end
-    return false
 end
 
 local song = {

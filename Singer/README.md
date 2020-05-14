@@ -24,11 +24,11 @@ Accepts auto-translated terms.
 	//sing delay <n>                    -  [n] second delay between song casting.
 	//sing recast song <min> <max>      -  Begin recasting songs between <min> and <max> seconds before they wear.
 	//sing recast buff <min> <max>      -  Same as the above for haste and refresh.
-    //sing <buff> <n>                   -  Set aoe buff song to x[n] or off.*
-	//sing <buff> <n> [name]            -  Set pianissimo song type to x[n] or off for [name].*
+    //sing <buff> [n]                   -  Set aoe buff song to x[n] or off.*
+	//sing <buff> [n] [name]            -  Set pianissimo song type to x[n] or off for [name].*
 	//sing marcato <song>               -  Set song to use following marcato.**
 	//sing dummy [n] <song>             -  Set dummy songs, ignored if you do not own the proper equipment.**
-	//sing aoe <slot|name> [on|off]     -  Set party slots to monitor for aoe range.
+	//sing aoe [slot|name] [on|off]     -  Set party slots to monitor for aoe range.
 	//sing save [list] [name]           -  Save settings, if <list> is provided will save current songs to playlist.
 	//sing reset                        -  Reset song timers.
 	//sing <song_slot> <song> [name]    -  Set songs to be used in specified order.**

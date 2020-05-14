@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.05.12'
+_addon.version = '1.20.05.14'
 
 require('luau')
 require('pack')
@@ -508,6 +508,62 @@ windower.register_event('addon command', function(...)
                 setting.songs[ind] = song.enl
             end
         end
+
+    elseif get.songs[commands[1]] then
+        local type = commands[1]
+        local songs = get.ext_songs(type, commands[2])
+
+        if songs then
+            commands:remove(2)
+        else
+            songs = get.songs[type]
+        end
+
+        commands:remove(1)
+        local name = commands[#commands]
+        name = name and name:ucfirst()
+
+        if get.party_member_slot(name) then
+            commands:remove(#commands)
+            setting.song[name] = setting.song[name] or L{}
+        else
+            name = nil
+        end
+
+        local song_list = setting.song[name] or setting.songs
+        local n = commands[#commands]
+        local n = tonumber({off=0}[n] or n or 1)
+
+        if not n then
+            return
+        elseif #songs < n then
+            addon_message('Error: %d exceeds the maximum value for %s.':format(n, type))
+            return
+        elseif n == 0 then
+            for x = #songs, 1, -1 do
+                local song = song_list:find(songs[x])
+
+                if song then
+                    song_list:remove(song)
+                end
+            end
+        else
+            for x = 1, n do
+                local song = songs[x]
+
+                if not song_list:contains(song) then
+                    if #song_list >= 5 then
+                        song_list:remove(5)
+                    end
+                    song_list:insert(1, song)
+                end
+            end
+        end
+
+        if song_list:empty() then
+            setting.song[name] = nil
+        end
+        addon_message('%s: %s':format(name or 'AoE', song_list:tostring()))
     elseif commands[1] == 'aoe' and commands[2] then
         local command = handled_commands.aoe[commands[#commands]]
         local slot = commands[2]:match('[1-5]')
@@ -585,60 +641,6 @@ windower.register_event('addon command', function(...)
         elseif commands[3] == 'on' then
             addon_message('Already buffing %s with %s':format(name, commands[1]:ucfirst()))
         end
-    elseif get.songs[commands[1]] and commands[2] then
-        local songs = get.ext_songs(commands[1], commands[2])
-
-        if songs then
-            commands:remove(2)
-        else
-            songs = get.songs[commands[1]]
-        end
-
-        commands:remove(1)
-
-        local name = commands[#commands]:ucfirst()
-
-        if get.party_member_slot(name) then
-            commands:remove(#commands)
-            setting.song[name] = setting.song[name] or L{}
-        else
-            name = nil
-        end
-
-        local song_list = setting.song[name] or setting.songs
-        local n = commands[#commands]
-        local n = tonumber({off=0}[n] or n or 1)
-
-        if not n then
-            return
-        elseif #songs < n then
-            addon_message('Error: %d exceeds the maximum value for %s.':format(n, commands[1]))
-            return
-        elseif n == 0 then
-            for x = #songs, 1, -1 do
-                local song = table.find(song_list, songs[x])
-
-                if song then
-                    song_list:remove(song)
-                end
-            end
-        else
-            for x = 1, n do
-                local song = songs[x]
-
-                if not table.find(song_list, song) then
-                    if #song_list >= 5 then
-                        song_list:remove(5)
-                    end
-                    song_list:insert(1, song)
-                end
-            end
-        end
-
-        if song_list:empty() then
-            setting.song[name] = nil
-        end
-        addon_message('%s: %s':format(name or 'AoE', song_list:tostring()))
     elseif commands[1] == 'debuff' and commands[2] then
         local debuff = resolve_song(commands)
 
