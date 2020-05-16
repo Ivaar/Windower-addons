@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.05.14'
+_addon.version = '1.20.05.15'
 
 require('luau')
 require('pack')
@@ -125,13 +125,13 @@ local display_box = function()
     str = str..colorize(7, '\n AoE: [%s]':format(settings.aoe.party and 'On' or 'Off'))
 
     local party = windower.ffxi.get_party()
-    local members = {player_name=true}
+    --local members = {[player_name]=true}
     for x = 1, 5 do
         local slot = 'p' .. x
         local member = party[slot]
         if member then
             member = member.name
-            members[member] = true
+            --members[member] = true
         else
             member = ''
         end
@@ -319,12 +319,13 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
             end
             for x = 1, packet['Target Count'] do
                 local buff_id = packet['Target '..x..' Action 1 Param']
+                local targ_id = packet['Target '..x..' ID']
                 if song_buffs[buff_id] then
-                    song_timers.adjust(song, windower.ffxi.get_mob_by_id(packet['Target '..x..' ID']).name, buffs)
+                    song_timers.adjust(song, windower.ffxi.get_mob_by_id(targ_id).name, buffs)
                 elseif song_debuffs[buff_id] then
                     local effect = song_debuffs[buff_id]
-                    debuffed[targ] = debuffed[targ.id] or {}
-                    debuffed[targ][effect] = true
+                    debuffed[targ_id] = debuffed[targ_id] or {}
+                    debuffed[targ_id][effect] = true
                 end
             end
         elseif finish_categories:contains(packet['Category']) then
@@ -575,6 +576,8 @@ windower.register_event('addon command', function(...)
                 return
             end
             slot = 'party'
+        elseif slot == 'p0' then
+            return
         end
         if not command then
             settings.aoe[slot] = not settings.aoe[slot]

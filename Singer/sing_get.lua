@@ -393,8 +393,9 @@ end
 
 function get.party_member_slot(name)
     local party = windower.ffxi.get_party()
+    for x = 0, 5 do
+        local slot = 'p' .. x
 
-    for slot in get.party_slots:it() do
         if party[slot] and party[slot].name == name then
             return slot
         end
