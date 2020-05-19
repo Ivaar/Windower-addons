@@ -1,11 +1,40 @@
+--[[
+Copyright © 2017, Ivaar
+All rights reserved.
+
+Redistribution and use in source and binary forms, with or without
+modification, are permitted provided that the following conditions are met:
+
+* Redistributions of source code must retain the above copyright
+  notice, this list of conditions and the following disclaimer.
+* Redistributions in binary form must reproduce the above copyright
+  notice, this list of conditions and the following disclaimer in the
+  documentation and/or other materials provided with the distribution.
+* Neither the name of AutoDNC nor the
+  names of its contributors may be used to endorse or promote products
+  derived from this software without specific prior written permission.
+
+THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS" AND
+ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED
+WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
+DISCLAIMED. IN NO EVENT SHALL IVAAR BE LIABLE FOR ANY
+DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES
+(INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES;
+LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND
+ON ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS
+SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+]]
+
 _addon.name = 'AutoDNC'
-_addon.version = '1.15.04.25'
-_addon.author = 'SblmS2J'
+_addon.version = '1.17.10.01'
+_addon.author = 'Ivaar'
 _addon.commands = {'AutoDNC','DNC'}
 
 res = require('resources')
 config = require('config')
 packets = require('packets')
+
 _static = {
     default = {
         actions = 0,
@@ -31,7 +60,9 @@ _static = {
     proc = L{['off']=0,['ja']=1,['ws']=2},
     dual_toggle = S{'actions','ja','ws','waltz','na','silent'}
     }
+
 setting = config.load(_static.default)
+
 clock = os.clock()
 time = clock
 delay = 0
@@ -283,8 +314,8 @@ windower.register_event('zone change',function()
     buff_active()
 end)
 
-function addon_message(...)
-    windower.add_to_chat(0,'%s: %s':format(_addon.name,table.concat({...},', ')))
+function addon_message(msg)
+    windower.add_to_chat(0,'%s: %s':format(_addon.name,msg))
 end
 
 windower.register_event('addon command', function(...)
@@ -299,12 +330,12 @@ windower.register_event('addon command', function(...)
         addon_message('Actions Off')
     elseif commands[1] == 'load' then
         setting = config.load(defaults)			
-        addon_message('Global setting Loaded.')
+        addon_message('Global Settings Loaded.')
     elseif commands[1]:lower() == 'save' then
         setting:save()			
-        addon_message('setting saved.')		
+        addon_message('Settings Saved.')		
         --config.save(setting, 'all')
-        --addon_message('Global setting Saved.')
+        --addon_message('Global Settings Saved.')
     elseif setting[commands[1]] then
         if not commands[2] then
             if _static.dual_toggle[commands[1]] then
@@ -338,12 +369,14 @@ windower.register_event('addon command', function(...)
                 addon_message(commands[1]..' is now set to '..setting[commands[1]])
             end
             if commands[1] == 'proc' then
-                if commands[2]:lower() == 'ja' then
-                    settings.ja = 1
-                    settings.ws = 0
+                if (commands[2]:lower() == 'ja' or commands[2]:lower() == 'on') then
+                    setting.ja = 1
+                    setting.ws = 0
                 elseif commands[2]:lower() == 'ws' then
-                    settings.ws = 1
-                    settings.ja = 0
+                    setting.ws = 1
+                    setting.ja = 0
+                elseif commands[2]:lower() == 'off' then
+                    setting.ja = 0
                 end
             end
         end
