@@ -27,7 +27,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 ]]
 
 _addon.name = 'AutoDNC'
-_addon.version = '1.17.10.01'
+_addon.version = '1.20.05.19'
 _addon.author = 'Ivaar'
 _addon.commands = {'AutoDNC','DNC'}
 
@@ -54,12 +54,12 @@ _static = {
         proc = 0,
         posx = 10,
         posy = 200
-        },
-    base = L{['off']=0,['on']=1},
-    samba = L{['off']=0,['haste']=1,['drain']=2},
-    proc = L{['off']=0,['ja']=1,['ws']=2},
-    dual_toggle = S{'actions','ja','ws','waltz','na','silent'}
-    }
+    },
+    base = {['off']=0,['on']=1},
+    samba = {['off']=0,['haste']=1,['drain']=2},
+    proc = {['off']=0,['ja']=1,['ws']=2},
+    dual_toggle = S{'actions','ja','ws','waltz','waltzpt','na','silent'}
+}
 
 setting = config.load(_static.default)
 
@@ -131,6 +131,21 @@ windower.register_event('incoming text', function(old,new,color,newcolor)
     end
 end)
 
+function get_FM(buffs)
+    if buffs['finishing move 1'] then
+        return 1
+    elseif buffs['finishing move 2'] then
+        return 2
+    elseif buffs['finishing move 3'] then
+        return 3
+    elseif buffs['finishing move 4'] then
+        return 4
+    elseif buffs['finishing move 5'] then
+        return 5
+    end
+    return 0
+end
+
 windower.register_event('prerender',function ()
     local now = os.clock()
     if clock + delay <= now then
@@ -140,14 +155,26 @@ windower.register_event('prerender',function ()
         local play = windower.ffxi.get_player()
         local mob = windower.ffxi.get_mob_by_target('t')
         local recast = windower.ffxi.get_ability_recasts()
-        if PreventAct or not play then return true else end
+
+        if not play then return end
+
+        local buffs = S(play.buffs):map(string.lower .. table.get-{'english'} .. table.get+{res.buffs})
+
+        if buffs.sleep or buffs.petrification or buffs.stun or buffs.charm or buffs.amnesia or buffs.terror or buffs.lullaby or buffs.impairment then
+            return
+        end
+
         if play.status == 1 and setting.actions == 1 and mob and mob.valid_target and mob.is_npc then
             Engaged = true
         else
             Engaged = false
         end
-        if play.status <= 1 and waltz(play,recast) or play.vitals.hpp < 50 then return true else end
+
+        if play.status <= 1 and waltz(play, recast, buffs) or play.vitals.hpp < 50 then return end
+
         if Engaged then
+            local FM = get_FM(buffs)
+
             if recast[216] and recast[216] == 0 and setting.samba ~= 0 then
                 if not buffs['Haste samba'] and play.vitals.tp >= 350 and setting.samba == 1 then
                     return autoJA('Haste samba', '<me>')
@@ -160,7 +187,7 @@ windower.register_event('prerender',function ()
                 end
             end
             if play.vitals.tp >= 1000 and setting.ws == 1 and mob.hpp >= setting.minwshp and mob.hpp <= setting.maxwshp and math.sqrt(mob.distance) <= setting.distance then
-                if play.main_job == 'DNC' and buffs['Finishing Move'] >= 1 and recast[226] == 0 then
+                if play.main_job == 'DNC' and FM >= 1 and recast[226] == 0 then
                     autoJA('Climactic Flourish', '<me>')
                 else
                     autoWS(setting.setws)
@@ -168,24 +195,24 @@ windower.register_event('prerender',function ()
             elseif play.sub_job == 'DNC' and setting.ja == 1 then
                 if recast[220] == 0 and play.vitals.tp >= 100 then
                     autoJA('Box Step', '<t>')
-                elseif recast[221] == 0 and buffs['Finishing Move'] >= 2 then
+                elseif recast[221] == 0 and FM >= 2 then
                     autoJA('Violent Flourish', '<t>')
-                elseif recast[222] == 0 and play.vitals.tp <= 400 and buffs['Finishing Move'] >= 4 then 
+                elseif recast[222] == 0 and play.vitals.tp <= 400 and FM >= 4 then 
                     autoJA('Reverse Flourish', '<me>')
-                elseif play.main_job == 'THF' and recast[240] == 0 then 
+                elseif play.main_job == 'THF' and recast[240] == 0 then
                     autoJA('Bully', '<t>')
                 end
             elseif play.main_job == 'DNC' and setting.ja == 1 then
                 if recast[220] == 0 and play.vitals.tp >= 100 then
-                    if recast[236] == 0 and buffs['Finishing Move'] < 3 then
+                    if recast[236] == 0 and FM < 3 then
                         autoJA('Presto', '<me>')
                     end
                     autoJA('Feather Step', '<t>')
-                elseif recast[223] == 0 and buffs['Finishing Move'] < 2 then
+                elseif recast[223] == 0 and FM < 2 then
                     autoJA('No Foot Rise', '<me>')
-                elseif recast[221] == 0 and buffs['Finishing Move'] >= 1 then
+                elseif recast[221] == 0 and FM >= 1 then
                     autoJA('Violent Flourish', '<t>')
-                elseif recast[222] == 0 and buffs['Finishing Move'] >= 2 then
+                elseif recast[222] == 0 and FM >= 2 then
                     autoJA('Wild Flourish', '<t>')	
                 end
             end
@@ -193,7 +220,7 @@ windower.register_event('prerender',function ()
     end
 end)
 
-function waltz(play,recast)
+function waltz(play, recast, buffs)
     if (play.main_job ~= 'DNC' and play.sub_job ~= 'DNC') or (buffs.invisible) then return false else end
     if setting.waltz == 1 and play.vitals.hpp < setting.waltzhp and play.vitals.tp >= 500 and recast[217] == 0 then
         autoJA('Curing waltz III', '<me>')
@@ -228,24 +255,6 @@ function waltz(play,recast)
     end
     return false
 end
-
-function buff_active()
-    buffs = {}
-    buffs['Finishing Move'] = 0
-    for i,v in ipairs(windower.ffxi.get_player().buffs) do
-        if v > 380 and v < 386 then
-            buffs['Finishing Move'] = v-380
-        elseif res.buffs[v] and res.buffs[v].english then
-            buffs[res.buffs[v].english:lower()] = (buffs[res.buffs[v].english:lower()] or 0) + 1
-        end
-    end
-    if buffs.sleep or buffs.petrification or buffs.stun or buffs.charm or buffs.amnesia or buffs.terror or buffs.lullaby or buffs.impairment then
-        PreventAct = true
-    else
-        PreventAct = false
-    end
-end
-windower.register_event('gain buff', 'lose buff', buff_active)
 
 function autoJA(str,ta)
     windower.send_command('input /ja "%s" %s':format(str,ta))
@@ -295,7 +304,6 @@ windower.register_event('ipc message', proc_table)
 
 windower.register_event('load',function ()
     staggered = {}
-    buff_active()
     windower.text.create('proc_box')
     windower.text.set_bg_color('proc_box',200,30,30,30)
     windower.text.set_color('proc_box',255,200,200,200)
@@ -311,7 +319,6 @@ end)
 
 windower.register_event('zone change',function()
     staggered = {}
-    buff_active()
 end)
 
 function addon_message(msg)
