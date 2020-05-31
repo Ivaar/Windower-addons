@@ -33,7 +33,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'AutoGEO','geo'}
 _addon.name = 'AutoGEO'
-_addon.version = '1.2020.05.11'
+_addon.version = '1.2020.05.29'
 
 require('luau')
 texts = require('texts')
@@ -368,9 +368,9 @@ function check_incoming_chunk(id,original,modified,injected,blocked)
                 local spell = geo_spells[packet.Param]
                 local mult = 1
                 local dur = 180 + windower.ffxi.get_player().job_points.geo.indocolure_spell_effect_dur * 2
-                if get_equip('legs') == 'Bagua Pants +1' then dur = dur + 20 end
+                if get_equip('legs') == 'Bagua Pants +1' then dur = dur + 20
                 elseif get_equip('legs') == 'Bagua Pants' then dur = dur + 12 end
-                if get_equip('feet') == 'Azimuth Gaiters' then dur = dur + 15 end
+                if get_equip('feet') == 'Azimuth Gaiters' then dur = dur + 15
                 elseif get_equip('legs') == 'Azimuth Gaiters +1' then dur = dur + 20 end
                 if get_equip('back') == 'Lifestream Cape' then mult = mult + settings.aug.lifestream * 0.01 end
                 dur = math.floor(mult*dur)
