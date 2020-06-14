@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.05.15'
+_addon.version = '1.20.06.14'
 
 require('luau')
 require('pack')
@@ -275,7 +275,7 @@ end
 
 do_stuff:loop(settings.interval)
 
-start_categories = S{7,9}
+start_categories = S{8,9}
 finish_categories = S{3,5}
 buff_lost_messages = S{64,204,206,350,531}
 death_messages = {[6]=true,[20]=true,[113]=true,[406]=true,[605]=true,[646]=true}
@@ -284,16 +284,7 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
     if id == 0x028 then
         local packet = packets.parse('incoming', original)
         if packet['Actor'] ~= get.player_id then return false end
-        if packet['Category'] == 8 then
-            if (packet['Param'] == 24931) then
-            -- Begin Casting
-                is_casting = true
-            elseif (packet['Param'] == 28787) then
-            -- Failed Casting
-                is_casting = false
-                del = 2.2
-            end
-        elseif packet['Category'] == 4 then
+        if packet['Category'] == 4 then
             -- Finish Casting
             is_casting = false
             del = settings.delay
@@ -328,10 +319,19 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
                     debuffed[targ_id][effect] = true
                 end
             end
+        elseif packet['Category'] == 7 then
+            is_casting = true
         elseif finish_categories:contains(packet['Category']) then
             is_casting = false
         elseif start_categories:contains(packet['Category']) then
-            is_casting = true
+            if (packet['Param'] == 24931) then
+            -- Begin Casting
+                is_casting = true
+            elseif (packet['Param'] == 28787) then
+            -- Failed Casting
+                is_casting = false
+                del = 2.2
+            end
         end
 
     elseif id == 0x029 then
