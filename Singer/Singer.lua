@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.06.14'
+_addon.version = '1.20.06.15'
 
 require('luau')
 require('pack')
@@ -280,18 +280,21 @@ finish_categories = S{3,5}
 buff_lost_messages = S{64,204,206,350,531}
 death_messages = {[6]=true,[20]=true,[113]=true,[406]=true,[605]=true,[646]=true}
 
-windower.register_event('incoming chunk', function(id,original,modified,injected,blocked)
-    if id == 0x028 then
-        local packet = packets.parse('incoming', original)
-        if packet['Actor'] ~= get.player_id then return false end
-        if packet['Category'] == 4 then
+windower.register_event('incoming chunk', function(id,data,modified,injected,blocked)
+    if injected then
+    elseif id == 0x028 then
+        local act = windower.packets.parse_action(data)
+
+        if act.actor_id ~= get.player_id then return false end
+
+        if act.category == 4 then
             -- Finish Casting
             is_casting = false
             del = settings.delay
-            local spell = get.spell_by_id(packet['Param'])
+            local spell = get.spell_by_id(act.param)
 
             if spell then
-                local targ = windower.ffxi.get_mob_by_id(packet['Target 1 ID'])
+                local targ = windower.ffxi.get_mob_by_id(act.targets[1].id)
 
                 if targ then
                     timers.buffs[spell.enl] = timers.buffs[spell.enl] or {}
@@ -300,34 +303,37 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
                 return
             end
 
-            local song = get.song_name(packet['Param'])
+            local song = get.song_name(act.param)
 
             if not song then return end
 
-            local buff_id = packet['Target 1 Action 1 Param']
-            if song_buffs[buff_id] and packet['Target Count'] > 1 and (not settings.aoe.party or get.aoe_range()) then
+            local effect = act.targets[1].actions[1].param
+
+            if song_buffs[effect] and not buffs.pianissimo and (not settings.aoe.party or get.aoe_range()) then
                 song_timers.adjust(song, 'AoE', buffs)
             end
-            for x = 1, packet['Target Count'] do
-                local buff_id = packet['Target '..x..' Action 1 Param']
-                local targ_id = packet['Target '..x..' ID']
-                if song_buffs[buff_id] then
-                    song_timers.adjust(song, windower.ffxi.get_mob_by_id(targ_id).name, buffs)
-                elseif song_debuffs[buff_id] then
-                    local effect = song_debuffs[buff_id]
-                    debuffed[targ_id] = debuffed[targ_id] or {}
-                    debuffed[targ_id][effect] = true
+
+            for _, target in ipairs(act.targets) do
+                effect = target.actions[1].param
+
+                if song_buffs[effect] then
+                    song_timers.adjust(song, windower.ffxi.get_mob_by_id(target.id).name, buffs)
+                elseif song_debuffs[effect] then
+                    effect = song_debuffs[effect]
+                    debuffed[target.id] = debuffed[target.id] or {}
+                    debuffed[target.id][effect] = true
                 end
             end
-        elseif packet['Category'] == 7 then
+
+        elseif act.category == 7 then
             is_casting = true
-        elseif finish_categories:contains(packet['Category']) then
+        elseif finish_categories:contains(act.category) then
             is_casting = false
-        elseif start_categories:contains(packet['Category']) then
-            if (packet['Param'] == 24931) then
+        elseif start_categories:contains(act.category) then
+            if (act.param == 24931) then
             -- Begin Casting
                 is_casting = true
-            elseif (packet['Param'] == 28787) then
+            elseif (act.Param == 28787) then
             -- Failed Casting
                 is_casting = false
                 del = 2.2
@@ -335,21 +341,24 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
         end
 
     elseif id == 0x029 then
-        local packet = packets.parse('incoming', original)
+        local actor = data:unpack('I', 0x04+1)
+        local target = data:unpack('I',0x08+1)
+        local param = data:unpack('I',0x0C+1)
+        local message = data:unpack('H',0x18+1) % 0x8000
 
-        if death_messages[packet.Message] then
-            debuffed[packet.Target] = nil
-        elseif buff_lost_messages:contains(packet.Message) and packet['Actor'] == get.player_id then
-            song_timers.buff_lost(packet['Target'],packet['Param 1']) 
+        if death_messages[message] then
+            debuffed[target] = nil
+        elseif actor == get.player_id and buff_lost_messages:contains(message)  then
+            song_timers.buff_lost(target, param) 
         end
 
-    elseif id == 0x63 and original:byte(5) == 9 then
+    elseif id == 0x63 and data:byte(5) == 9 then
         -- appears # of copies are not checked anymore and times may only ever be used for afermath, I keep forgetting we dont getno party buff timers
         local set_buff = {}
         local set_time = {}
         for n=1,32 do
-            local buff_id = original:unpack('H', n*2+7)
-            local buff_ts = original:unpack('I', n*4+69)
+            local buff_id = data:unpack('H', n*2+7)
+            local buff_ts = data:unpack('I', n*4+69)
 
             if buff_ts == 0 then
                 break
@@ -364,15 +373,15 @@ windower.register_event('incoming chunk', function(id,original,modified,injected
         times = set_time
 
     elseif id == 0x00A then
-        local packet = packets.parse('incoming', original)
+        local packet = packets.parse('incoming', data)
 
         get.player_id = packet.Player
         get.zone_id = packet.Zone
-        get.player_name = packet.Name
+        get.player_name = packet['Player Name']
     end
 end)
 
-windower.register_event('outgoing chunk', function(id,original,modified,is_injected,is_blocked)
+windower.register_event('outgoing chunk', function(id,data,modified,is_injected,is_blocked)
     if id == 0x015 then
         local coords = modified:sub(0x04+1, 0x0F+1)
         is_moving = last_coords ~= coords
