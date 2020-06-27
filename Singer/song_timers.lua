@@ -58,7 +58,7 @@ local equip_mods = {
     [21400] = {0.1},            -- 'Blurred Harp',
     [21401] = {0.2,Ballad=0.2}, -- 'Blurred Harp +1',
     [21405] = {0.2} ,           -- 'Eminent Flute',
-	[21404] = {0.3},			-- 'Linos'			-- assumes +2 songs augment	
+    [21404] = {0.3},			-- 'Linos'			-- assumes +2 songs augment
     [20629] = {0.05},           -- 'Legato Dagger',
     [20599] = {0.05},           -- 'Kali',
     [27672] = {Paeon=0.1},      -- 'Brioso Roundlet',

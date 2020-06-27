@@ -1,4 +1,4 @@
-# Singer
+# Sing
 ### Automates casting of bard buff songs.
 #### If you are updating from a version prior to 1.20.05.09 make sure you delete your existing settings.xml file located within the addons data folder.
 Configure songs with commands, calculates song duration based on active job abilities and gear equipped 
@@ -35,6 +35,7 @@ Accepts auto-translated terms.
 	//sing <song_slot> <clear> [name]   -  Remove song from specified slot.
 	//sing playlist save <list> [name]  -  Saves current songs to playlist.
 	//sing playlist <list|clear> [name] -  Loads songs from a previously set playlist. (clear is an empty playlist to remove all songs)
+	//sing clear <name|aoe>				-  Clear song list for name
 
 To configure songs use:
 	

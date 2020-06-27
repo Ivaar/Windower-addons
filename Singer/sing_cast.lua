@@ -27,7 +27,7 @@ function cast.check_song(song_list,targ,buffs,spell_recasts,recasts,JA_WS_lock,r
         end
     end
 
-    for i = 1, maxsongs do
+    for i = 1, math.min(#song_list, maxsongs) do
         local song = get.song_by_name(song_list[i])
 
         if song and spell_recasts[song.id] <= 0 and

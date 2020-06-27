@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.06.15'
+_addon.version = '1.20.06.27'
 
 require('luau')
 require('pack')
@@ -30,7 +30,7 @@ default = {
     aoe={['party']=true, ['p1'] = true,['p2'] = true,['p3'] = true,['p4'] = true,['p5'] = true},
     min_ws=20,
     max_ws=99,
-    box={bg={visible=false},text={size=10},pos={x=650,y=0}},
+    box={bg={visible=true},text={size=10},pos={x=650,y=0}},
 }
 
 settings = config.load(default)
@@ -99,7 +99,7 @@ end
 del = 0
 counter = 0
 timers = {AoE={}, buffs={}}
-last_coords = 'fff':pack(0,0,0)
+party = get.party()
 buffs = get.buffs()
 times = {}
 debuffed = {}
@@ -124,29 +124,25 @@ local display_box = function()
     str = str..colorize(6, '\n Debuffing:[%s]':format(settings.debuffing and 'On' or 'Off'))
     str = str..colorize(7, '\n AoE: [%s]':format(settings.aoe.party and 'On' or 'Off'))
 
-    local party = windower.ffxi.get_party()
-    --local members = {[player_name]=true}
-    for x = 1, 5 do
-        local slot = 'p' .. x
-        local member = party[slot]
-        if member then
-            member = member.name
-            --members[member] = true
-        else
-            member = ''
+    if settings.aoe.party then
+        for x = 1, 5 do
+            local slot = 'p' .. x
+            local member = party[slot]
+            member = member and member.name or ''
+            str = str..colorize(x + 7,'\n <%s> [%s] %s':format(slot, settings.aoe[slot] and 'On' or 'Off', member))
         end
-        str = str..colorize(x + 7,'\n <%s> [%s] %s':format(slot, settings.aoe[slot] and 'On' or 'Off', member))
     end
-
     str = str..'\n Marcato:\n  [%s]':format(settings.marcato)
     for k,v in ipairs(setting.songs) do
         str = str..'\n   %d:[%s]':format(k, v)
     end
-
-    for k,v in pairs(setting.song) do
-        str = str..'\n %s:':format(k)
-        for i, t in ipairs(v) do
-            str = str..'\n  %d:[%s]':format(i,t)
+    for member in party:it() do
+        local name = member.name
+        if setting.song[name] then
+            str = str..'\n %s:':format(name)
+            for i, t in ipairs(setting.song[name]) do
+                str = str..'\n  %d:[%s]':format(i, t)
+            end
         end
     end
 
@@ -180,6 +176,7 @@ bard_status = texts.new(display_box(),settings.box,settings)
 bard_status:show()
 
 function do_stuff()
+    party = get.party()
     bard_status:text(display_box())
     if not settings.actions then return end
     counter = counter + settings.interval
@@ -229,7 +226,8 @@ function do_stuff()
 
         if settings.pianissimo then
             for targ, songs in pairs(setting.song) do
-                if get.valid_target(targ, 20) then
+                local member = get.party_member(targ)
+                if member and get.is_valid_target(member.mob, 20) then
                     if cast.check_song(songs,targ,buffs,spell_recasts,ability_recasts,JA_WS_lock,recast) then
                         return
                     end
@@ -241,7 +239,7 @@ function do_stuff()
         for key,targets in pairs(setting.buffs) do
             local spell = get.spell(key)
             for k,targ in ipairs(targets) do
-                if targ and spell and spell_recasts[spell.id] <= 0 and get.valid_target(targ, 20) and play.vitals.mp >= 40 and
+                if targ and spell and spell_recasts[spell.id] <= 0 and get.valid_ally(targ:lower(), 20) and play.vitals.mp >= 40 and
                 (not timers.buffs or not timers.buffs[spell.enl] or not timers.buffs[spell.enl][targ] or 
                 os.time() - timers.buffs[spell.enl][targ]+recast > 0) then
                     cast.MA(spell.enl,targ)
@@ -383,9 +381,8 @@ end)
 
 windower.register_event('outgoing chunk', function(id,data,modified,is_injected,is_blocked)
     if id == 0x015 then
-        local coords = modified:sub(0x04+1, 0x0F+1)
-        is_moving = last_coords ~= coords
-        last_coords = coords
+        is_moving = modified:sub(0x04+1, 0x0F+1) ~= lastcoord
+        lastcoord = modified:sub(0x04+1, 0x0F+1)
     end
 end)
 
@@ -435,7 +432,7 @@ function resolve_song(commands)
 
     if x then commands[#commands] = {'I','II','III','IV','V','VI'}[x] end
 
-    return get.song_by_name(table.concat(commands, ' ',2))
+    return get.song_from_command(table.concat(commands, ' ',2))
 end
 
 windower.register_event('addon command', function(...)
@@ -481,6 +478,9 @@ windower.register_event('addon command', function(...)
 
             if name then
                 setting.song[name] = song_list:copy()
+                if setting.song[name]:empty() then
+                    setting.song[name] = nil
+                end
             else
                 setting.songs = song_list:copy()
             end
@@ -488,34 +488,55 @@ windower.register_event('addon command', function(...)
         else
             addon_message('Playlist not found: %s':format(commands[2]))
         end
-    elseif tonumber(commands[1], 6) and commands[2] then
-        local name = commands[#commands]:ucfirst()
-        local ind = tonumber(commands[1])
 
-        if get.party_member_slot(name) then
-            commands:remove(#commands)
+    elseif handled_commands.clear:contains(commands[1]) and commands[2] then
+        local song_list
+        if commands[2] == 'aoe' then
+            setting.songs:clear()
         else
-            name = nil
+            for _, Name in T(setting.song):key_filter(string.ieq+{commands[2]}):it() do
+                setting.song[Name] = nil
+            end
         end
+    elseif tonumber(commands[1], 6) and commands[2] then
+        local name = commands[commands[3] and #commands]
+        local ind = tonumber(commands[1])
 
         if handled_commands.clear:contains(commands[2]) then
             if not name then
                 setting.songs:remove(ind)
-            elseif setting.song[name] then
-                setting.song[name]:remove(ind)
-                if setting.song[name]:empty() then
-                    setting.song[name] = nil
+            else
+                for _, Name in T(setting.song):key_filter(string.ieq+{name}):it() do
+                    setting.song[Name]:remove(ind)
+                    if setting.song[Name]:empty() then
+                        setting.song[Name] = nil
+                    end
                 end
             end
         else
-            local song = resolve_song(commands)
-
-            if not song then
-            elseif name then
-                setting.song[name] = setting.song[name] or L{}
-                setting.song[name][ind] = song.enl
+            local member = get.party_member(name)
+            if member then
+                name = member.name
+                commands:remove(#commands)
             else
-                setting.songs[ind] = song.enl
+                name = nil
+            end
+
+            local song = resolve_song(commands)
+            local song_list
+            if song then
+                if name then
+                    setting.song[name] = setting.song[name] or L{}
+                    song_list = setting.song[name]
+                else
+                    song_list = setting.songs
+                end
+
+                if song_list:length() < ind then
+                    song_list:append(song)
+                else
+                    song_list[ind] = song
+                end
             end
         end
 
@@ -530,19 +551,32 @@ windower.register_event('addon command', function(...)
         end
 
         commands:remove(1)
-        local name = commands[#commands]
-        name = name and name:ucfirst()
 
-        if get.party_member_slot(name) then
-            commands:remove(#commands)
-            setting.song[name] = setting.song[name] or L{}
+        local n = commands[1]
+        n = tonumber({off=0}[n] or n)
+        if n then
+            commands:remove(1)
         else
-            name = nil
+            n = 1
+        end
+
+        local name
+        if commands[1] then
+            local member = get.party_member(commands[1])
+            if member then
+                name = member.name
+            else
+                for _, Name in T(setting.song):key_filter(string.ieq+{commands[1]}):it() do
+                    name = Name
+                end
+            end
+            if not name then
+                return
+            end
+            setting.song[name] = setting.song[name] or L{}
         end
 
         local song_list = setting.song[name] or setting.songs
-        local n = commands[#commands]
-        local n = tonumber({off=0}[n] or n or 1)
 
         if not n then
             return
@@ -576,8 +610,10 @@ windower.register_event('addon command', function(...)
         addon_message('%s: %s':format(name or 'AoE', song_list:tostring()))
     elseif commands[1] == 'aoe' and commands[2] then
         local command = handled_commands.aoe[commands[#commands]]
-        local slot = commands[2]:match('[1-5]')
-        slot = slot and 'p' .. slot or get.party_member_slot(commands[2]:ucfirst())
+        local n = commands[2]:match('[1-5]')
+        
+        local _, slot = get.party_member(commands[2])
+        slot = slot or 'p'..n
 
         if not slot then
             if command and not commands[3] then
@@ -636,7 +672,7 @@ windower.register_event('addon command', function(...)
 
         if song then
             setting.dummy[ind] = song.enl
-            addon_message('Dummy song #%d set to %s':format(ind,song.enl))
+            addon_message('Dummy song #%d set to %s':format(ind,song))
         else
             addon_message('Invalid song name.')
         end
@@ -660,19 +696,19 @@ windower.register_event('addon command', function(...)
             return
         end
 
-        local ind = setting.debuffs:find(debuff.enl)
+        local ind = setting.debuffs:find(debuff)
 
         if ind then
             setting.debuffs:remove(ind)
         else
-            setting.debuffs:append(debuff.enl)
+            setting.debuffs:append(debuff)
         end
     elseif type(default[commands[1]]) == 'string' and commands[2] then
         local song = resolve_song(commands)
 
         if song then
-            settings[commands[1]] = song.enl
-            addon_message('%s is now set to %s':format(commands[1],song.enl))
+            settings[commands[1]] = song
+            addon_message('%s is now set to %s':format(commands[1],song))
         else
             addon_message('Invalid song name.')
         end
@@ -734,13 +770,16 @@ function mouse_event(type, x, y, delta, blocked)
 
                 if type == 2 then
                     if default.aoe[button] then
+                        if not settings.aoe.party and button ~= 'party' then
+                            break
+                        end
                         settings.aoe[button] = not settings.aoe[button]
                     else
                         settings[button] = not settings[button]
                     end
+                    return true
                 end
             end
-
             upper = lower
             lower = lower + off_y
         end

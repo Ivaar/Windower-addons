@@ -336,6 +336,14 @@ function get.song_by_name(name)
     return nil
 end
 
+function get.song_from_command(str)
+    for k, name in pairs(song) do
+        if name:gsub('[%s%p]', ''):lower() == str:gsub('[%s%p]', '') then
+            return name
+        end
+    end
+end
+
 function get.maxsongs(targ,buffs)
     local maxsongs = get.base_songs
     if buffs['clarion call'] then
@@ -365,41 +373,38 @@ end
 
 get.party_slots = L{'p1','p2','p3','p4','p5'}
 
-local function is_valid_target(target, distance)
+function get.is_valid_target(target, distance)
     return target.hpp > 0 and target.distance:sqrt() < distance and (target.is_npc or not target.charmed)
 end
 
-function get.valid_target(name, distance)
+function get.valid_ally(name, distance)
     for ind, member in pairs(windower.ffxi.get_party()) do
-        if type(member) == 'table' and member.mob and member.mob.name == name then
-            return is_valid_target(member.mob, distance)
+        if type(member) == 'table' and member.mob and member.mob.name:lower() == name then
+            return get.is_valid_target(member.mob, distance)
         end
     end
     return false
 end
 
-function get.aoe_range()
+function get.aoe_range(name)
     local party = windower.ffxi.get_party()
 
     for slot in get.party_slots:it() do
         local member = party[slot]
 
-        if member and member.zone == get.zone_id and settings.aoe[slot] and (not member.mob or not is_valid_target(member.mob, 10)) then
+        if member and member.zone == get.zone_id and settings.aoe[slot] and (not member.mob or not get.is_valid_target(member.mob, 10)) then
             return false
         end
     end
     return true
 end
 
-function get.party_member_slot(name)
-    local party = windower.ffxi.get_party()
-    for x = 0, 5 do
-        local slot = 'p' .. x
+function get.party()
+    return T(windower.ffxi.get_party()):key_filter(table.contains+{get.party_slots:append('p0')})
+end
 
-        if party[slot] and party[slot].name == name then
-            return slot
-        end
-    end
+function get.party_member(name)
+    return party:with('name', string.ieq+{name})
 end
 
 return get
