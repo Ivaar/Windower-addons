@@ -1,15 +1,16 @@
 _addon.name = 'htmb'
 _addon.author = 'Ivaar'
-_addon.version = '1.0.0.1'
+_addon.version = '1.0.0.2'
 _addon.command = 'htmb'
 
-require('luau')
+require('tables')
+require('logger')
 require('pack')
 bit = require('bit')
 
 buy_list = {10,2,5,9,3} -- key items will be purchased in this order until you are unable to buy more
 
-htmb_map = {
+htmb_map = T{
      [0] = {name = 'Shadow Lord phantom gem',      cost = 10},
      [1] = {name = 'Stellar Fulcrum phantom gem',  cost = 10},
      [2] = {name = 'Celestial Nexus phantom gem',  cost = 10},
@@ -43,58 +44,109 @@ htmb_npcs = {
     [240] = {name = 'Mimble-Pimble',  menu_id = 895}, -- Port Windurst (L-5)
 }
 
-menu_options = 0
-merit_points = 0
+local retries = 0
+local state = 0
 
 math.has_bit = function(mask, offset)
     return math.floor(mask/2^offset)%2 == 1
 end
 
-function get_option_index()
-    for x = 1, #buy_list do
-        local option = buy_list[x]
+function get_option_index(menu_options, merit_points)
+    local buy = buy_key_item or buy_list
+    for x = 1, #buy do
+        local option = buy[x]
         if htmb_map[option] and htmb_map[option].cost <= merit_points and menu_options:has_bit(option) then
-            return option
+            return 0x100 * option + 0x02
         end
+    end
+    return 0x40000000
+end
+
+function interact_npc(name)
+    local me = windower.ffxi.get_mob_by_target('me')
+    local npc = windower.ffxi.get_mob_by_name(name)
+    if me and me.status == 0 and npc and math.sqrt(npc.distance) < 6 and npc.valid_target and npc.is_npc and bit.band(npc.spawn_type, 0xDF) == 2 then
+        windower.packets.inject_outgoing(0x1A, 'I2H2d2':pack(0, npc.id, npc.index, 0, 0, 0))
+        state = 1
     end
 end
 
-function initiate_npc(name)
-    local self = windower.ffxi.get_mob_by_target('me')
-    local target = windower.ffxi.get_mob_by_name(name)
-    if not self or self.status > 0 then return end
-    if target and math.sqrt(target.distance) < 6 and target.valid_target and target.is_npc and bit.band(target.spawn_type, 0xDF) == 2 then
-        windower.packets.inject_outgoing(0x1A, 'I2H2d2':pack(0xE1A,target.id,target.index,0,0,0))
+function purchase(message)
+    local zone = windower.ffxi.get_info().zone
+    if not htmb_npcs[zone] then
+        state = 0
+        return
     end
+    if state ~= 0 then
+        return
+    end
+    if message then
+        if message ~= '' then
+            buy_key_item = {tonumber(message)}
+        else
+            buy_key_item = nil
+        end
+        retries = 5
+    end
+    interact_npc(htmb_npcs[zone].name)
 end
 
 windower.register_event('incoming chunk', function(id, data, modified, injected, blocked)
-    if id == 0x034 then
-        local zone_id, menu_id = data:unpack('H2', 43)
+    if id == 0x034 and state == 1 then
+        state = 2
+        local npc_id = data:unpack('I', 0x04+1)
+        local npc_index, zone_id, menu_id = data:unpack('H3', 0x28+1)
         if htmb_npcs[zone_id] and menu_id == htmb_npcs[zone_id].menu_id then
-            menu_options, merit_points = data:unpack('I2', 13)
-            windower.send_command('wait 2;setkey escape;wait .5;setkey escape up;')
+            local option_index = get_option_index(data:unpack('I2', 0x0C+1))
+            windower.packets.inject_outgoing(0x5B, 'I3H4':pack(0, npc_id, option_index, npc_index, 0, zone_id, menu_id))
+            return true
         end
-    end
-end)
-
-windower.register_event('outgoing chunk', function(id, data, modified, injected, blocked)
-    if id == 0x05B then
-        local zone_id, menu_id = data:unpack('H2', 17)
-        if htmb_npcs[zone_id] and menu_id == htmb_npcs[zone_id].menu_id and data:byte(15) == 0 then
-            local new_option = get_option_index()
-            if data:unpack('I', 9) == 0x40000000 and new_option then
-                initiate_npc(htmb_npcs[zone_id].name)
-                return data:sub(1,8)..string.char(0x02,new_option,0,0)..data:sub(13)
+    elseif id == 0x52 and state ~= 0 then
+        state = 0
+        if data:byte(0x04+1) == 0 then
+            retries = retries - 1
+            if retries > 0 then
+                purchase()
+            else
+                notice('npc is not responding')
             end
         end
     end
 end)
 
-windower.register_event('addon command', function()
-    local zone = windower.ffxi.get_info().zone
-
-    if htmb_npcs[zone] then
-        initiate_npc(htmb_npcs[zone].name)
+windower.register_event('addon command', function(...)
+    local command = arg[1] and arg[1]:lower()
+    local message = ''
+    local send_all
+    if command == 'all' then
+        table.remove(arg,1)
+        send_all = true
+    elseif command == 'help' then
+        notice('//htmb [all] [key item]')
+        notice('[all] - send command to all instances')
+        notice('[key item] - defaults to buylist if not specified, supports wildcards')
+        return
+    end
+    if command then
+        local str = _raw.table.concat(arg, ' ')
+        local matches = htmb_map:filter(windower.wc_match-{str} .. table.get-{'name'})
+        message = next(matches)
+        if not message then
+            error('Unknown key item: ' .. str)
+            return
+        elseif matches:length() > 1 then
+            for match in matches:it() do
+                notice(match.name)
+            end
+            error('Too many key items match: ' .. str)
+            return
+        end
+        notice('Buying ' .. matches[message].name)
+    end
+    purchase(message)
+    if send_all then
+        windower.send_ipc_message(message)
     end
 end)
+
+windower.register_event('ipc message', purchase)
