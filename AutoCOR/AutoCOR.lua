@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.name = 'AutoCOR'
 _addon.commands = {'cor'}
-_addon.version = '1.20.05.02'
+_addon.version = '1.20.07.19'
 
 require('pack')
 require('lists')
@@ -207,11 +207,11 @@ windower.register_event('addon command', function(...)
 
         if not slot then
             return
-        elseif not commands[3]  then
+        elseif not commands[3] then
             settings.aoe[slot] = not settings.aoe[slot]
-        elseif command == 'on' then
+        elseif commands[3] == 'on' then
             settings.aoe[slot] = true
-        elseif command == 'off' then
+        elseif commands[3] == 'off' then
             settings.aoe[slot] = false
         end
 
