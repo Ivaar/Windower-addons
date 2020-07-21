@@ -10,7 +10,7 @@ windower.send_command('unload bidder')
 
 _addon.command = 'AH'
 _addon.name = 'AuctionHelper'
-_addon.version = '1.18.05.27'
+_addon.version = '1.20.07.20'
 _addon.author = 'Ivaar'
 
 default = {
@@ -29,7 +29,7 @@ settings = config.load(default)
 auction_list = texts.new(settings.display)
 
 zones = {}
-zones.ah = L{'Bastok Mines', 'Bastok Markets', 'Norg', 'Southern San d\'Oria', 'Port San d\'Oria', 'Raboa', 'Windurst Woods', 'Windurst Walls', 'Kazham', 'Lower Jeuno', 'Ru\'Lude Gardens', 'Port Jeuno', 'Upper Jeuno', 'Aht Urhgan Whitegate', 'Al Zahbi', 'Nashmau', 'Tavnazian Safehold', 'Western Adoulin', 'Eastern Adoulin'}
+zones.ah = L{'Bastok Mines', 'Bastok Markets', 'Norg', 'Southern San d\'Oria', 'Port San d\'Oria', 'Rabao', 'Windurst Woods', 'Windurst Walls', 'Kazham', 'Lower Jeuno', 'Ru\'Lude Gardens', 'Port Jeuno', 'Upper Jeuno', 'Aht Urhgan Whitegate', 'Al Zahbi', 'Nashmau', 'Tavnazian Safehold', 'Western Adoulin', 'Eastern Adoulin'}
 zones.mh = {}
 
 function timef(ts)
