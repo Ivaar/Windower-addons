@@ -222,13 +222,13 @@ windower.register_event('addon command', function(...)
         end
     elseif commands[1] == 'save' then
         settings:save()
+        windower.add_to_chat(207, 'Settings saved.')
     elseif commands[1] == 'eval' then
         assert(loadstring(table.concat(commands, ' ',2)))()
     else
         -- create help text
     end
     cor_status:text(display_box())
-    --windower.add_to_chat(207, str)
 end)
 
 function use_JA(str)
