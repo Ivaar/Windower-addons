@@ -64,7 +64,7 @@ function log_quests(quest_type,start,finish)
             total = total + 1
             if completed[x+1] then
                 complete = complete + 1
-            elseif maps[quest_type][x] then
+            else
                 windower.add_to_chat(current[x+1] and 167 or 207, maps[quest_type][x])
             end
         end
