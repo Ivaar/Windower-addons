@@ -55,9 +55,9 @@ _static = {
         posx = 10,
         posy = 200
     },
-    base = {['off']=0,['on']=1},
-    samba = {['off']=0,['haste']=1,['drain']=2},
-    proc = {['off']=0,['ja']=1,['ws']=2},
+    base = T{['off']=0,['on']=1},
+    samba = T{['off']=0,['haste']=1,['drain']=2},
+    proc = T{['off']=0,['ja']=1,['ws']=2},
     dual_toggle = S{'actions','ja','ws','waltz','waltzpt','na','silent'}
 }
 
