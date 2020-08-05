@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.06.27'
+_addon.version = '1.20.08.04'
 
 require('luau')
 require('pack')
@@ -671,7 +671,7 @@ windower.register_event('addon command', function(...)
         local song = resolve_song(commands)
 
         if song then
-            setting.dummy[ind] = song.enl
+            setting.dummy[ind] = song
             addon_message('Dummy song #%d set to %s':format(ind,song))
         else
             addon_message('Invalid song name.')
