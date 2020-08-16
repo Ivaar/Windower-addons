@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.08.04'
+_addon.version = '1.20.08.16'
 
 require('luau')
 require('pack')
@@ -62,11 +62,11 @@ do
         local str = ''
         for k, v in pairs(tab) do
             if class(v) == 'List' then
-                str = str .. '':rpad(' ', padding) .. '%s = L{':format(k) .. table_tostring(v, padding+4) .. '},\n'
+                str = str .. '':rpad(' ', padding) .. '["%s"] = L{':format(k) .. table_tostring(v, padding+4) .. '},\n'
             elseif class(v) == 'Table' then
-                str = str .. '':rpad(' ', padding) .. '%s = T{\n':format(k) .. table_tostring(v, padding+4) .. '':rpad(' ', padding) .. '},\n'
+                str = str .. '':rpad(' ', padding) .. '["%s"] = T{\n':format(k) .. table_tostring(v, padding+4) .. '':rpad(' ', padding) .. '},\n'
             elseif class(v) == 'table' then
-                str = str .. '':rpad(' ', padding) .. '%s = {\n':format(k) .. table_tostring(v, padding+4) .. '':rpad(' ', padding) .. '},\n'
+                str = str .. '':rpad(' ', padding) .. '["%s"] = {\n':format(k) .. table_tostring(v, padding+4) .. '':rpad(' ', padding) .. '},\n'
             elseif class(v) == 'string' then
                 str = str .. '"%s",':format(v)
             end
