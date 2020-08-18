@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.08.16'
+_addon.version = '1.20.06.15'
 
 require('luau')
 require('pack')
@@ -186,7 +186,7 @@ function do_stuff()
         local play = windower.ffxi.get_player()
 
         if not play or play.main_job ~= 'BRD' or (play.status ~= 1 and play.status ~= 0) then return end
-        if is_moving or is_casting or buffs.stun or buffs.sleep or buffs.charm or buffs.terror or buffs.petrification then return end
+        if is_moving or buffs.stun or buffs.sleep or buffs.charm or buffs.terror or buffs.petrification then return end
 
         local JA_WS_lock = buffs.amnesia or buffs.impairment
 
@@ -287,7 +287,6 @@ windower.register_event('incoming chunk', function(id,data,modified,injected,blo
 
         if act.category == 4 then
             -- Finish Casting
-            is_casting = false
             del = settings.delay
             local spell = get.spell_by_id(act.param)
 
@@ -324,16 +323,15 @@ windower.register_event('incoming chunk', function(id,data,modified,injected,blo
             end
 
         elseif act.category == 7 then
-            is_casting = true
+            del = 2.2
         elseif finish_categories:contains(act.category) then
-            is_casting = false
+            del = 2.2
         elseif start_categories:contains(act.category) then
             if (act.param == 24931) then
             -- Begin Casting
-                is_casting = true
-            elseif (act.Param == 28787) then
+                del = 4.2
+            else
             -- Failed Casting
-                is_casting = false
                 del = 2.2
             end
         end
@@ -595,7 +593,7 @@ windower.register_event('addon command', function(...)
             for x = 1, n do
                 local song = songs[x]
 
-                if not song_list:contains(song) then
+                if not song_list:find(song) then
                     if #song_list >= 5 then
                         song_list:remove(5)
                     end
@@ -737,14 +735,12 @@ end)
 
 function event_change()
     settings.actions = false
-    is_casting = false
     debuffed = {}
     song_timers.reset()
     bard_status:text(display_box())
 end
 
 function status_change(new,old)
-    is_casting = false
     if new == 2 or new == 3 then
         event_change()
     end
