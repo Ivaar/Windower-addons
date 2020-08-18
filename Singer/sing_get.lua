@@ -404,7 +404,7 @@ function get.party()
 end
 
 function get.party_member(name)
-    return party:with('name', string.ieq+{name})
+    return name and party:with('name', string.ieq+{name})
 end
 
 return get

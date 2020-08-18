@@ -1,7 +1,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'Singer','sing'}
 _addon.name = 'Singer'
-_addon.version = '1.20.06.15'
+_addon.version = '1.20.08.18'
 
 require('luau')
 require('pack')
@@ -535,6 +535,9 @@ windower.register_event('addon command', function(...)
                 else
                     song_list[ind] = song
                 end
+                addon_message('%s: %s':format(name or 'AoE', song_list:tostring()))
+            else
+                addon_message('Invalid song name.')
             end
         end
 
