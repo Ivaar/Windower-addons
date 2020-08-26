@@ -33,7 +33,7 @@
 _addon.author = 'Ivaar'
 _addon.commands = {'AutoGEO','geo'}
 _addon.name = 'AutoGEO'
-_addon.version = '1.2020.05.29'
+_addon.version = '1.2020.08.26'
 
 require('luau')
 texts = require('texts')
@@ -298,7 +298,7 @@ function addon_command(...)
         elseif commands[1] == 'aug' and settings.aug[commands[2]] and commands[3] and tonumber(commands[3]) then
             settings.aug['lifestream'] = tonumber(commands[3])
             addon_message('Lifestream Cape = Indi eff. dur. +%s.':format(commands[3]))
-        elseif type(settings[commands[1]]) == 'string' and commands[2] then
+        elseif type(default[commands[1]]) == 'string' and commands[2] then
             if commands[2] == 'off' then
                 settings[commands[1]] = nil
                 addon_message('%s will not be used':format(commands[1]))
@@ -311,10 +311,10 @@ function addon_command(...)
                     addon_message('Invalid spell name.')
                 end
             end
-        elseif type(settings[commands[1]]) == 'number' and commands[2] and tonumber(commands[2]) then
+        elseif type(default[commands[1]]) == 'number' and commands[2] and tonumber(commands[2]) then
             settings[commands[1]] = tonumber(commands[2])
             addon_message('%s is now set to %d':format(commands[1],settings[commands[1]]))
-        elseif type(settings[commands[1]]) == 'boolean' then
+        elseif type(default[commands[1]]) == 'boolean' then
             if (not commands[2] and settings[commands[1]] == true) or (commands[2] and commands[2] == 'off') then
                 settings[commands[1]] = false
             elseif (not commands[2]) or (commands[2] and commands[2] == 'on') then
