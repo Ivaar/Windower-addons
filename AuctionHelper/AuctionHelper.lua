@@ -10,7 +10,7 @@ windower.send_command('unload bidder')
 
 _addon.command = 'AH'
 _addon.name = 'AuctionHelper'
-_addon.version = '1.20.07.20'
+_addon.version = '1.20.09.02'
 _addon.author = 'Ivaar'
 
 default = {
@@ -98,7 +98,7 @@ windower.register_event('addon command', function(...)
         commands[1] = commands[1]:lower()
         if (commands[1] == 'buy' or commands[1] == 'sell') and commands[4] then
             if ah_proposal(commands[1],table.concat(commands, ' ',2,#commands-2):lower(),commands[#commands-1]:lower(),commands[#commands]) then lclock = now+3 end
-        elseif commands[1] == 'clear' and commands[2] and commands[2]:lower() == 'sold' and auction_box then
+        elseif commands[1] == 'clear' and auction_box then
             remove_sold()
             return
         end
