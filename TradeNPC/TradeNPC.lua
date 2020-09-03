@@ -4,7 +4,7 @@ res_items = require('resources').items
 
 _addon.name = 'TradeNPC'
 _addon.author = 'Ivaar'
-_addon.version = '1.19.09.26'
+_addon.version = '1.20.09.02'
 _addon.command = 'tradenpc'
 
 function get_item_res(item)
@@ -34,21 +34,47 @@ function format_price(price)
     return nil
 end
 
+function valid_target(npc)
+    if math.sqrt(npc.distance) < 6 and npc.valid_target and npc.is_npc and bit.band(npc.spawn_type, 0xDF) == 2 then
+        return true
+    end
+    return false
+end
+
+function find_npc(name)
+    for index, npc in pairs(windower.ffxi.get_mob_array()) do
+        if npc and npc.name:ieq(name) and valid_target(npc) then
+            return npc
+        end
+    end
+end
+
+function get_target()
+    local npc = windower.ffxi.get_mob_by_target('t')
+    if npc and valid_target(npc) then
+        return npc
+    end
+end
+
 windower.register_event('addon command', function(...)
     local args = {...}
     if #args < 2 then
         print('tradenpc <quantity> <item name>\ne.g. //tradenpc 100 "1 byne bill"')
         return
     end
+
     if windower.ffxi.get_mob_by_target('me').status ~= 0 then return end
-    local target = windower.ffxi.get_mob_by_target('t')
-    
+
+    local target
+
     if #args%2 == 1 then
-        target = windower.ffxi.get_mob_by_name(args[#args])
+        target = find_npc(args[#args])
         args[#args] = nil
+    else
+        target = get_target()
     end
-    
-    if target and target.is_npc and bit.band(target.spawn_type, 2) == 2 and target.valid_target and target.distance <= 35.9 then
+
+    if target then
         local ind = {}
         local qty = {}
         local start = 1
