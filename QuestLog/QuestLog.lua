@@ -1,7 +1,7 @@
 _addon.name = 'QuestLog'
 _addon.author = 'Ivaar'
 _addon.commands = {'quest','ql'}
-_addon.version = '1.0.0.0'
+_addon.version = '1.0.0.1'
 
 require('sets')
 packets = require('packets')
@@ -18,6 +18,11 @@ local maps = {
     coalition = require('maps/coalition'),
     other = require('maps/other'),
 }
+
+local red = 167
+local green = 158
+local blue = 207
+local yellow = 159
 
 local quest_logs = {
     [0x0070] = {type='current', area='other'},
@@ -48,7 +53,7 @@ windower.register_event('incoming chunk', function(id, data, modified, injected,
 end)
 
 function addon_error(str)
-    windower.add_to_chat(167, 'You must change areas or complete %s quests before using this command.':format(str))
+    windower.add_to_chat(red, 'You must change areas or complete %s quests before using this command.':format(str))
 end
 
 function log_quests(quest_type,start,finish)
@@ -65,11 +70,11 @@ function log_quests(quest_type,start,finish)
             if completed[x+1] then
                 complete = complete + 1
             else
-                windower.add_to_chat(current[x+1] and 167 or 207, maps[quest_type][x])
+                windower.add_to_chat(current[x+1] and red or blue, maps[quest_type][x])
             end
         end
     end
-    windower.add_to_chat(204, '-- %s Quests %d/%d Completed --\31\207 Inactive\31\167 Current':format(quest_type:ucfirst(),complete,total))
+    windower.add_to_chat(green, '-- %s Quests %d/%d Completed --\31\207 Inactive\31\167 Current':format(quest_type:ucfirst(),complete,total))
 end
 
 windower.register_event('addon command', function(...)
@@ -85,14 +90,10 @@ windower.register_event('addon command', function(...)
             addon_error('coalition assignment')
             return
         end
-        local red = 167
-        local green = 204
-        local blue = 207
-        local yellow = 159
         local complete_count,current_count = 0,0
         local current_coalition = to_set(quests.current.coalition)
         local completed_coalition = to_set(quests.completed.coalition)
-        windower.add_to_chat(blue, 'Inactive\31\204 Completed\31\167 Current\31\159 Completed + Current')
+        windower.add_to_chat(blue, 'Inactive\31\158 Completed\31\167 Current\31\159 Completed + Current')
         for id = 0, #maps.coalition do
             if #maps.coalition[id] > 8 then
                 local complete = completed_coalition[id+1]
