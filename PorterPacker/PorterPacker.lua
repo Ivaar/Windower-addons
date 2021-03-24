@@ -1,6 +1,6 @@
 _addon.name = 'PorterPacker'
 _addon.author = 'Ivaar'
-_addon.version = '0.0.0.5'
+_addon.version = '0.0.0.6'
 _addon.commands = {'porterpacker','packer','po'}
 
 require('pack')
@@ -320,7 +320,7 @@ windower.register_event('addon command', function(...)
     elseif commands[1] == 'export' or commands[1] == 'exp' then
         local str = 'return {\n'
         for _, item in ipairs(windower.ffxi.get_items(0)) do
-            if slips.get_slip_id_by_item_id(item.id) then
+            if slips.get_slip_id_by_item_id(item.id) and res.items[item.id] then
                 str = str .. '    "%s",\n':format(res.items[item.id].name)
             end
         end
