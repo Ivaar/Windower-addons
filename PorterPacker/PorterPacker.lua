@@ -33,6 +33,8 @@ local zones = {
     [252] = 246,    -- Norg - (G-7)
     [256] = 43,     -- Western Adoulin - (H-11)
     [280] = 802,    -- Mog Garden
+	[279] = 11, 	-- Walk of Echoes [P2]
+	[298] = 13,     -- Walk of Echoes [P1]
 }
 
 local function space_available(bag_id)
