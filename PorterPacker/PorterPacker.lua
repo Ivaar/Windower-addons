@@ -1,6 +1,6 @@
 _addon.name = 'PorterPacker'
 _addon.author = 'Ivaar'
-_addon.version = '0.0.0.6'
+_addon.version = '0.0.0.7'
 _addon.commands = {'porterpacker','packer','po'}
 
 require('pack')
