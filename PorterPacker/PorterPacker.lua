@@ -33,7 +33,7 @@ local zones = {
     [252] = 246,    -- Norg - (G-7)
     [256] = 43,     -- Western Adoulin - (H-11)
     [280] = 802,    -- Mog Garden
-	[279] = 11, 	-- Walk of Echoes [P2]
+	[279] = 13, 	-- Walk of Echoes [P2]
 	[298] = 13,     -- Walk of Echoes [P1]
 }
 
