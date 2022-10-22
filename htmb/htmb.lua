@@ -36,6 +36,7 @@ htmb_map = T{
     [21] = {name = 'Champion phantom gem',         cost = 10},
     [22] = {name = 'Divine phantom gem',           cost = 10},
     [23] = {name = 'Maiden phantom gem',           cost = 10},
+    [24] = {name = "Wyrm God phantom gem",         cost = 10},
 }
 
 htmb_npcs = {
