@@ -239,7 +239,11 @@ local equippable_bags = {
     'Wardrobe',
     'Wardrobe2',
     'Wardrobe3',
-    'Wardrobe4'
+    'Wardrobe4',
+    'Wardrobe5',
+    'Wardrobe6',
+    'Wardrobe7',
+    'Wardrobe8'
     }
 
 local extra_song_harp = {
