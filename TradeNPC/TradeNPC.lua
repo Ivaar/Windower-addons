@@ -25,6 +25,16 @@ function find_item(inventory, item_id, count, exclude)
     return nil
 end
 
+function count_item(inventory, item_id, exclude)
+    local n = 0
+    for k,v in ipairs(inventory) do
+        if v.id == item_id and v.status == 0 and not exclude[k] then
+            n = n + v.count
+        end
+    end
+    return n
+end
+
 function format_price(price)
     price = not string.match(price,'%a') and price:gsub('%p', '')
     price = price and tonumber(price)
@@ -35,7 +45,7 @@ function format_price(price)
 end
 
 function valid_target(npc)
-    if math.sqrt(npc.distance) < 6 and npc.valid_target and npc.is_npc and bit.band(npc.spawn_type, 0xDF) == 2 then
+    if math.sqrt(npc.distance) < 50 and npc.valid_target and npc.is_npc and bit.band(npc.spawn_type, 0xDF) == 2 then
         return true
     end
     return false
@@ -95,12 +105,18 @@ windower.register_event('addon command', function(...)
             if not args[x*2] then
                 break
             end
-            local units = tonumber(args[x*2-1])
             local name = windower.convert_auto_trans(args[x*2]):lower()
             local item = get_item_res(name)
             if not item or item.flags['Linkshell'] == true then
                 print('"%s" not a valid item name: arg %d':format(name, x*2))
                 return
+            end
+            local units = tonumber(args[x*2-1])
+            if not units and args[x*2-1] == "*" then
+                units = math.min(
+                    count_item(inventory, item.id, exclude),
+                    item.stack * (8 - #qty)
+                )
             end
             if not units or units < 1 then
                 print('Invalid quantity: arg %d':format(x*2-1))
