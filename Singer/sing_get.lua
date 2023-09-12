@@ -38,6 +38,7 @@ get.songs = {
     acarol = {'Water Carol','Water Carol II'},
     lcarol = {'Light Carol','Light Carol II'},
     dcarol = {'Dark Carol','Dark Carol II'},
+    aria = {'Aria of Passion'},
 }
 
 get.debuffs = {
@@ -142,7 +143,7 @@ local song = {
     [415] = 'Goblin Gavotte',
     [416] = 'Cactuar Fugue',
     [417] = 'Honor March',
-    [418] = 'Protected Aria',
+    [418] = 'Aria of Passion',
     [419] = 'Advancing March',
     [420] = 'Victory March',
     [421] = 'Battlefield Elegy',
@@ -239,7 +240,11 @@ local equippable_bags = {
     'Wardrobe',
     'Wardrobe2',
     'Wardrobe3',
-    'Wardrobe4'
+    'Wardrobe4',
+    'Wardrobe5',
+    'Wardrobe6',
+    'Wardrobe7',
+    'Wardrobe8'
     }
 
 local extra_song_harp = {
