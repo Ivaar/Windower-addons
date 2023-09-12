@@ -15,6 +15,7 @@ song_buffs = {
     [207] = 'capriccio',
     [209] = 'round',
     [210] = 'gavotte',
+    [213] = 'aria',
     [214] = 'march',
     [215] = 'etude',
     [216] = 'carol',
@@ -84,14 +85,24 @@ local equip_mods = {
     [26033] = {0.3},            -- 'Mnbw. Whistle +1',
     [26758] = {Madrigal=0.1},   -- 'Fili Calot',
     [26759] = {Madrigal=0.1},   -- 'Fili Calot +1',
+    [23094] = {Madrigal=0.1},   -- 'Fili Calot +2,
+    [23429] = {Madrigal=0.1},   -- 'Fili Calot +3,
     [26916] = {0.11,Minuet=0.1},-- 'Fili Hongreline',
     [26917] = {0.12,Minuet=0.1},-- 'Fili Hongreline +1',
+    [23161] = {0.13,Minuet=0.1},-- 'Fili Hongreline +2',
+    [23496] = {0.14,Minuet=0.1},-- 'Fili Hongreline +3',
     [27070] = {March=0.1},      -- 'Fili Manchettes',
     [27071] = {March=0.1},      -- 'Fili Manchettes +1',
+    [23228] = {March=0.1},      -- 'Fili Manchettes +2',
+    [23563] = {March=0.1},      -- 'Fili Manchettes +3',
     [27255] = {Ballad=0.1},     -- 'Fili Rhingrave',
     [27256] = {Ballad=0.1},     -- 'Fili Rhingrave +1',
+    [23295] = {Ballad=0.1},     -- 'Fili Rhingrave +2',
+    [23630] = {Ballad=0.1},     -- 'Fili Rhingrave +3',
     [27429] = {Scherzo=0.1},    -- 'Fili Cothurnes',
     [27430] = {Scherzo=0.1},    -- 'Fili Cothurnes +1',
+    [23362] = {Scherzo=0.1},    -- 'Fili Cothurnes +2',
+    [23697] = {Scherzo=0.1},    -- 'Fili Cothurnes +3',
     [26255] = {Madrigal=0.1,Prelude=0.1}, -- 'Intarabus\'s Cape',
     [25561] = {Etude=0.1},      -- 'Mousai Turban',
     [25562] = {Etude=0.2},      -- 'Mousai Turban +1',
@@ -101,6 +112,9 @@ local equip_mods = {
     [25902] = {Minne=0.2},      -- 'Mousai Seraweels +1',
     [25968] = {Mambo=0.1},      -- 'Mousai Crackows',
     [25969] = {Mambo=0.2},      -- 'Mousai Crackows +1',
+    [22305] = {0.2},            -- Loughnashade 99-3
+    [22306] = {0.3},            -- Loughnashade 99-4
+    [22307] = {0.4},            -- Loughnashade 99-5
     }
 
 local slots = {'main','sub','range','head','neck','body','hands','legs','feet','back'}
